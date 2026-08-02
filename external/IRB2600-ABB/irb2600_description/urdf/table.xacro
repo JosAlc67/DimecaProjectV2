@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<robot name="table" xmlns:xacro="http://ros.org/wiki/xacro">
+
+	<material name="coral3">
+		<color rgba="${255/255} ${255/255} ${255/255} 1.0"/>
+	</material>
+	
+	<!-- HERE you can change the position of the robot in the table -->
+	<link name="table">
+		<visual>
+			<origin rpy="0 0 0" xyz="0 1.20 0"/>
+			<geometry>
+			<box size="1.3 0.7 0.82"/>
+			</geometry>
+			<material name="coral3"/>
+		</visual>
+		<collision>
+			<origin rpy="0 0 0" xyz="0 1.20 0"/>
+			<geometry>
+			<box size="1.3 0.7 0.82"/>
+			</geometry>
+			<material name="coral3"/>
+		</collision>
+		<inertial>
+			<origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+			<mass value="0.001"/>
+			<inertia ixx="1.0e-06" ixy="0.0" ixz="0.0" iyy="1.0e-06" iyz="0.0" izz="1.0e-06"/>
+		</inertial>
+  	</link>	
+
+	<joint name="table_j" type="fixed">
+		<parent link="world"/>
+		<child link="table"/>
+		<origin xyz="0 0 0.41" rpy="0 0 -1.57"/>
+	</joint>
+
+	<gazebo reference="table">
+    <material>Gazebo/Wood</material>
+  	</gazebo>
+	
+
+</robot>

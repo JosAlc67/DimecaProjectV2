@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+
+    <param name="robot_description" textfile="$(find irb2600_description)/urdf/irb2600.urdf"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"  args="-param robot_description -urdf -model irb2600" />
+        
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+    <rosparam file="$(find irb2600_gazebo)/config/irb2600_arm_controller.yaml"/>
+
+    <node name="Controller_Spawner" pkg="controller_manager" type="spawner" args="arm_controller"/>
+    
+    
+
+</launch>

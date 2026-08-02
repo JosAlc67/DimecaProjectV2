@@ -1,0 +1,7 @@
+<launch>
+
+    <node name="writing_node" pkg="irb2600_master" type="writing_node.py" respawn="false" output="screen">
+    </node>
+
+
+</launch>

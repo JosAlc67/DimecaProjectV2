@@ -1,0 +1,53 @@
+# Velocity limits taken directly from irb2600_description/urdf/irb2600_macro.xacro
+# (same numeric values as the original RAMEL-ESPOL ROS 1 URDF). Acceleration
+# limits have no source in the manufacturer data collected so far (report
+# Table XIII does not include them); they are set to 2x the velocity limit as
+# a conservative placeholder, consistent with the report's own note that
+# "indicated values correspond to initial design assumptions ... and may be
+# adjusted during simulation" (Sec. IV-D).
+joint_limits:
+  joint_1:
+    has_velocity_limits: true
+    max_velocity: 3.054
+    has_acceleration_limits: true
+    max_acceleration: 6.108
+  joint_2:
+    has_velocity_limits: true
+    max_velocity: 3.054
+    has_acceleration_limits: true
+    max_acceleration: 6.108
+  joint_3:
+    has_velocity_limits: true
+    max_velocity: 3.054
+    has_acceleration_limits: true
+    max_acceleration: 6.108
+  joint_4:
+    has_velocity_limits: true
+    max_velocity: 6.283
+    has_acceleration_limits: true
+    max_acceleration: 12.566
+  joint_5:
+    has_velocity_limits: true
+    max_velocity: 6.283
+    has_acceleration_limits: true
+    max_acceleration: 12.566
+  joint_6:
+    has_velocity_limits: true
+    max_velocity: 8.727
+    has_acceleration_limits: true
+    max_acceleration: 17.454
+
+# Merged into this file (instead of a separate pilz_cartesian_limits.yaml)
+# to work around a known MoveItConfigsBuilder bug where .joint_limits() and
+# .pilz_cartesian_limits() both write into the same "robot_description_planning"
+# namespace, and whichever is assembled last in to_moveit_configs() silently
+# overwrites the other instead of merging
+# (https://github.com/moveit/moveit2/issues/1691). Loading both keys from one
+# file sidesteps the overwrite since both builder calls end up with identical
+# content. These values are otherwise unused: only the OMPL pipeline is
+# configured (see launch/*.launch.py), never Pilz.
+cartesian_limits:
+  max_trans_vel: 1.0
+  max_trans_acc: 2.25
+  max_trans_dec: -5.0
+  max_rot_vel: 1.57

@@ -1,0 +1,100 @@
+<?xml version="1.0" ?>
+<robot name="wall" xmlns:xacro="http://ros.org/wiki/xacro">
+
+	<material name="coral4">
+		<color rgba="${0/255} ${0/255} ${0/255} 0.5"/>
+	</material>
+	<material name="transparent">
+		<color rgba="${255/255} ${255/255} ${255/255} 0.1"/>
+	</material>
+	
+	<!-- HERE you can change the position of the robot in the table -->
+	<link name="wall_back">
+		<visual>
+			<origin rpy="0 0 0" xyz="0 -2.1 1.5"/>
+			<geometry>
+			<box size="4.8 0.2 3.0"/>
+			</geometry>
+			<material name="coral4"/>
+		</visual>
+		<collision>
+			<origin rpy="0 0 0" xyz="0 -2.1 1.5"/>
+			<geometry>
+			<box size="4.8 0.2 3.0"/>
+			</geometry>
+			<material name="coral4"/>
+		</collision>
+		<inertial>
+			<origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+			<mass value="0.001"/>
+			<inertia ixx="1.0e-06" ixy="0.0" ixz="0.0" iyy="1.0e-06" iyz="0.0" izz="1.0e-06"/>
+		</inertial>
+  	</link>	
+
+    <link name="wall_right">
+		<visual>
+			<origin rpy="0 0 1.57" xyz="2.4 1.11 1.5"/>
+			<geometry>
+			<box size="6.2 0.2 3.0"/>
+			</geometry>
+			<material name="coral4"/>
+		</visual>
+		<collision>
+			<origin rpy="0 0 1.57" xyz="2.4 1.11 1.5"/>
+			<geometry>
+			<box size="6.2 0.2 3.0"/>
+			</geometry>
+			<material name="coral4"/>
+		</collision>
+		<inertial>
+			<origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+			<mass value="0.001"/>
+			<inertia ixx="1.0e-06" ixy="0.0" ixz="0.0" iyy="1.0e-06" iyz="0.0" izz="1.0e-06"/>
+		</inertial>
+  	</link>	
+
+    <link name="wall_left">
+		<visual>
+			<origin rpy="0 0 1.57" xyz="-2.4 1.11 1.5"/>
+			<geometry>
+			<box size="6.2 0.2 3.0"/>
+			</geometry>
+			<material name="transparent"/>
+		</visual>
+		<collision>
+			<origin rpy="0 0 1.57" xyz="-2.4 1.11 1.5"/>
+			<geometry>
+			<box size="6.2 0.2 3.0"/>
+			</geometry>
+			<material name="transparent"/>
+		</collision>
+		<inertial>
+			<origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+			<mass value="0.001"/>
+			<inertia ixx="1.0e-06" ixy="0.0" ixz="0.0" iyy="1.0e-06" iyz="0.0" izz="1.0e-06"/>
+		</inertial>
+  	</link>	
+
+	<joint name="wallback_j" type="fixed">
+		<parent link="world"/>
+		<child link="wall_back"/>
+		<origin xyz="0 0 0" rpy="0 0 -1.57"/>
+	</joint>
+
+    <joint name="wallback_j2" type="fixed">
+		<parent link="world"/>
+		<child link="wall_right"/>
+		<origin xyz="0 0 0" rpy="0 0 -1.57"/>
+	</joint>
+
+    <joint name="wallback_j3" type="fixed">
+		<parent link="world"/>
+		<child link="wall_left"/>
+		<origin xyz="0 0 0" rpy="0 0 -1.57"/>
+	</joint>
+
+	<gazebo reference="wall_left">
+    <material>Gazebo/GreyTransparent</material>
+  	</gazebo>
+
+</robot>

@@ -1,0 +1,14 @@
+<launch>
+
+    
+    <!-- <node name='key2vel' pkg='irb2600_master' type='key2vel.py' /> -->
+    
+    <!-- <node name='keyboard' pkg='keyboard' type='keyboard' /> -->
+
+    <node name='example' pkg='irb2600_master' type='example_motion' output='screen' />
+
+    <!-- <node name="writing_node" pkg="irb2600_master" type="writing_node.py" respawn="false" output="screen">
+    </node> -->
+
+
+</launch>

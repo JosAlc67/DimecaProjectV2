@@ -1,0 +1,58 @@
+#
+# Generated backup file, do not edit.
+#
+# Originally at: C:\Users\yayon\OneDrive\Documentos\RobotStudio\Virtual Controllers\TEMP\d3600e65-3f5b-4442-97b5-35cea80c7902\backup.882985
+# 2022-11-25  22:51:02
+#
+>>SYSTEM_ID:
+VIRTUAL_USE
+
+>>PRODUCTS_ID:
+RobotWare Version: 6.11.01.00
+
+  RobotWare Base
+  English
+  616-1 PC Interface
+  623-1 Multitasking
+  Drive System IRB 2600/390/4400/6400R
+  ADU-790A in position X3
+  ADU-790A in position Y3
+  ADU-790A in position Z3
+  Axis Calibration
+  IRB 2600-12/1.65 Type C
+
+>>HOME:
+All public files and directories
+
+>>SYSPAR:
+SYS.cfg
+PROC.cfg
+MMC.cfg
+EIO.cfg
+SIO.cfg
+MOC.cfg
+
+
+>>TASK1: (T_ROB1,,)
+PROGMOD\ROS_motion.mod @ 
+SYSMOD\ROS_common.sys @ 
+SYSMOD\user.sys @ 
+SYSMOD\ROS_messages.sys @ 
+SYSMOD\ROS_socket.sys @ 
+
+>>TASK2: (ROS_StateServer,,)
+PROGMOD\ROS_stateServer.mod @ 
+SYSMOD\ROS_common.sys @ 
+SYSMOD\user.sys @ 
+SYSMOD\ROS_messages.sys @ 
+SYSMOD\ROS_socket.sys @ 
+
+>>TASK3: (ROS_MotionServer,,)
+PROGMOD\ROS_motionServer.mod @ 
+SYSMOD\ROS_common.sys @ 
+SYSMOD\user.sys @ 
+SYSMOD\ROS_messages.sys @ 
+SYSMOD\ROS_socket.sys @ 
+
+
+>>EOF:

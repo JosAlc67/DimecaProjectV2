@@ -1,0 +1,6 @@
+<launch>
+
+    <node name="planing_node" pkg="irb2600_master" type="write_word.py" respawn="false" output="screen">
+    </node>
+
+</launch>

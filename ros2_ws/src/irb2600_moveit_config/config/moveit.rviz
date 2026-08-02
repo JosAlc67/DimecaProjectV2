@@ -1,0 +1,77 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Plane Cell Count: 10
+      Cell Size: 0.5
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Topic:
+        Value: /robot_description
+      TF Prefix: ""
+      Visual Enabled: true
+      Collision Enabled: false
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Show Names: false
+      Show Axes: true
+      Show Arrows: false
+    - Class: moveit_rviz_plugin/PlanningScene
+      Name: PlanningScene
+      Enabled: false
+      # Disabled: moveit_rviz_plugin/PlanningScene never subscribes to
+      # /monitored_planning_scene on this ROS 2 Humble install (confirmed
+      # with `ros2 topic info /monitored_planning_scene`: 1 publisher from
+      # move_group, 0 subscribers), so it never rendered anything anyway.
+      # The target_structure/temporary_obstacle collision objects are
+      # instead shown below via a plain MarkerArray published by
+      # scene_setup_node, which does not depend on this plugin.
+      Move Group Namespace: ""
+      Robot Description: robot_description
+      Planning Scene Topic: /monitored_planning_scene
+      Scene Robot:
+        Show Robot Visual: false
+        Show Robot Collision: false
+      Scene Geometry:
+        Show Scene Geometry: true
+    - Class: rviz_default_plugins/MarkerArray
+      Name: SceneMarkers
+      Enabled: true
+      Topic:
+        Value: /scene_setup_node/scene_markers
+  Global Options:
+    Fixed Frame: world
+    Background Color: 48; 48; 48
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  Value: true
+  Views:
+    Current:
+      # Framed to show the pedestal, the full arm reach, the target
+      # structure (x=1.8) and the temporary obstacles (~1.3 m ring)
+      # together by default -- see
+      # irb2600_coating_cell/config/scene_objects.yaml for those poses.
+      Class: rviz_default_plugins/Orbit
+      Distance: 7.0
+      Focal Point:
+        X: 0.9
+        Y: 0.0
+        Z: 0.9
+      Yaw: 0.9
+      Pitch: 0.4
+Window Geometry:
+  Height: 900
+  Width: 1600
+  X: 0
+  Y: 0

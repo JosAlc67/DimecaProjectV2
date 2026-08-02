@@ -1,0 +1,29 @@
+<launch>
+
+	<arg name="table" default="true" />
+	<arg name="robot_base" default="false" />
+	<arg name="vacuum_end" default="false" />
+	<arg name="ee_marker" default="false" />
+	<arg name="garra" default="false" />
+	<arg name="base_vacuum_end" default="false" />
+	<!-- <arg name="gripper_2f" default="false" />
+	<arg name="gripper_3f" default="false" /> -->
+	<arg name="camera_d435" default="false" />
+	<arg name="camera_l515" default="false" />
+	
+
+	<param name="robot_description" command="$(find xacro)/xacro --inorder $(find irb2600_description)/urdf/irb2600_main.xacro 
+			table:=$(arg table)
+			robot_base:=$(arg robot_base)
+			vacuum_end:=$(arg vacuum_end)
+			ee_marker:=$(arg ee_marker)
+			base_vacuum_end:=$(arg base_vacuum_end)
+			camera_d435:=$(arg camera_d435)
+			camera_l515:=$(arg camera_l515)
+			garra:=$(arg garra)"/>
+	
+	<node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/>
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+	<node name="rviz_gui" pkg="rviz" type="rviz" args="-d $(find irb2600_description)/rviz_config/default.rviz"/>
+	
+</launch>

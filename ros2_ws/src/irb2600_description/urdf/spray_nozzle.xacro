@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!--
+    Simulated spraying-nozzle end effector (report Table V/VIII: "Spraying nozzle
+    (simulated)"). Geometry is reused from RAMEL-ESPOL/IRB2600-ABB
+    irb2600_description/urdf/ee_marker.xacro (the whiteboard-marker tool), which is
+    a reasonable placeholder standoff length until a real nozzle CAD is available.
+
+    Frames:
+      tool0            - ROS-Industrial flange-facing frame (from irb2600_macro.xacro)
+      spray_nozzle_link - visual/collision body of the nozzle
+      nozzle_tip        - TCP frame used as x_e in the preliminary mathematical model
+                           (report Sec. VII-B/VII-G). Its Z axis is the tool approach
+                           vector z_e that must align with the surface normal n_s
+                           within theta_error <= 10 deg (Table VIII), and its distance
+                           to the target surface is d_standoff in [0.15, 0.25] m
+                           (Table VIII). Those checks are done at planning time, not
+                           encoded as a fixed offset here.
+  -->
+  <!--
+    Note: does NOT xacro:include materials.xacro here; it must be included
+    exactly once by whichever top-level file assembles the robot (see
+    irb2600.urdf.xacro), otherwise urdfdom rejects the duplicated
+    'abb_orange' material definition. This file only uses the
+    material_abb_orange macro, assuming it is already defined.
+  -->
+
+  <link name="spray_nozzle_link">
+    <inertial>
+      <origin xyz="8.65924565893986E-05 0.0195599698345866 1.93283795397848E-10" rpy="0 0 0"/>
+      <mass value="0.0453532792285496"/>
+      <inertia
+        ixx="0.000055032" ixy="0.000000016" ixz="0"
+        iyy="0.000014893" iyz="0" izz="0.000054929"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://irb2600_description/meshes/supports/spray_nozzle.STL"/>
+      </geometry>
+      <xacro:material_abb_orange/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://irb2600_description/meshes/supports/spray_nozzle.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="tool0_to_spray_nozzle" type="fixed">
+    <parent link="tool0"/>
+    <child link="spray_nozzle_link"/>
+    <origin xyz="0 0 0" rpy="1.57 0 0"/>
+  </joint>
+
+  <!-- TCP: x_e in the preliminary mathematical model (report eq. 1-2, 8-9) -->
+  <link name="nozzle_tip">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="tool0_to_nozzle_tip" type="fixed">
+    <origin xyz="0 0 0.14" rpy="0 0 0"/>
+    <parent link="tool0"/>
+    <child link="nozzle_tip"/>
+  </joint>
+
+</robot>

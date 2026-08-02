@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<robot name="robot_base_mesh" xmlns:xacro="http://ros.org/wiki/xacro">
+    <material name="coral">
+		<color rgba="${255/255} ${127/255} ${80/255} 1.0"/>
+	</material>
+    <!-- HERE you can change the position of the robot in the table -->
+	<link name="base_mesh">
+		<visual>
+			<origin rpy="1.5708 0 0" xyz="0.0 0 0"/>
+			<geometry>
+			<mesh
+          filename="package://irb2600_description/meshes/supports/robot_base_iam.stl" scale="0.01005 0.01005 0.01005"/>
+			</geometry>
+			<material name="coral"/>
+		</visual>
+		<collision>
+			<origin rpy="1.5708 0 0" xyz="0.0 0 0"/>
+			<geometry>
+			<mesh
+          filename="package://irb2600_description/meshes/supports/robot_base_iam.stl" scale="0.01005 0.01005 0.01005"/>
+			</geometry>
+			<material name="coral"/>
+		</collision>
+		<inertial>
+			<origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+			<mass value="120"/>
+			<inertia ixx="1.0e-06" ixy="0.0" ixz="0.0" iyy="1.0e-06" iyz="0.0" izz="1.0e-06"/>
+		</inertial>
+  	</link>	
+
+	<joint name="base_mesh_joint" type="fixed">
+		<parent link="world"/>
+		<child link="base_mesh"/>
+		<origin xyz="0 0 0.209" rpy="0 0 0"/>
+	</joint>
+
+	<joint name="base_robot_joint" type="fixed">
+		<parent link="base_mesh"/>
+		<child link="base_link"/>
+		<origin xyz="0 0 0.378" rpy="0 0 0"/>
+	</joint>
+	
+</robot>

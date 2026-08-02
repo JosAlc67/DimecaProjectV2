@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!--
+    New in the ROS 2 port (no equivalent needed in the ROS 1 package, which used
+    Gazebo + ros_control transmissions instead). Since the project scope excludes
+    Gazebo for now (Progress Report 1 requires only planning-scene collision
+    checking and replanning, not physics simulation) and excludes low-level motor
+    control of the real robot, joints are driven through ros2_control's
+    mock_components/GenericSystem: it accepts position commands from
+    joint_trajectory_controller and instantly reports them back as state, which is
+    enough for MoveIt planning/execution and RViz visualization.
+  -->
+  <xacro:macro name="abb_irb2600_ros2_control" params="prefix">
+    <ros2_control name="${prefix}IRB2600System" type="system">
+      <hardware>
+        <plugin>mock_components/GenericSystem</plugin>
+      </hardware>
+      <joint name="${prefix}joint_1">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="${prefix}joint_2">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="${prefix}joint_3">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="${prefix}joint_4">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="${prefix}joint_5">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="${prefix}joint_6">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+    </ros2_control>
+  </xacro:macro>
+
+</robot>

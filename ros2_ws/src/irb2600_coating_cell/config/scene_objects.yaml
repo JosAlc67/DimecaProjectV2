@@ -1,0 +1,83 @@
+# Shared source of truth for the target structure (aerospace panel, Table VIII)
+# and the temporary obstacles (Table VIII / Table XVII Cases 2-4: "temporary
+# scaffolding, tools, wiring, auxiliary equipment", Sec. I), loaded by both
+# scene_setup_node (planning-scene collision objects) and perception_sim_node
+# (simulated structure_pose / obstacles/*/pose / surface_normal topics), so
+# the two views of the scene never drift apart.
+#
+# These are first-pass placement values, not measured/validated against the
+# real IRB 2600 reach envelope (Table VII: up to 1.85 m). Once this is
+# launched on a machine with ROS 2 + RViz, check that the panel and the
+# space around it are actually reachable and adjust here if not.
+/**:
+  ros__parameters:
+    target_structure:
+      frame_id: "world"
+      # Panel center. Box is thin along local X; the report's 1.0 x 0.6 m
+      # useful area (Table VIII) is modeled as width along Y, height along Z.
+      # Pushed out to x=1.8 (report Table VII: up to 1.85 m reach -- with
+      # d_standoff=0.20 the farthest raster waypoint corner sits at a
+      # radial distance of ~1.65 m from the base, still ~0.2 m short of
+      # max reach) to leave the arm real room to maneuver between the
+      # base, the obstacles, and the panel.
+      position: [1.8, 0.0, 1.0]
+      orientation_rpy: [0.0, 0.0, 0.0]
+      size: [0.02, 1.0, 0.6]
+      # Outward normal in the panel's own local frame (rotated by
+      # orientation_rpy to get the world-frame surface_normal). With the
+      # identity orientation above, the panel occupies local +X and opens
+      # towards the robot at local -X.
+      local_normal: [-1.0, 0.0, 0.0]
+
+    # Named list of temporary obstacles. Each name below must also have its
+    # own <name>.type/frame_id/position/orientation_rpy/size block -- this is
+    # the standard ROS 2 pattern for a dynamic list of named sub-configs
+    # (no native "list of structs" parameter type). scene_setup_node inserts
+    # one CollisionObject per name (id = name); perception_sim_node publishes
+    # each one's pose on its own topic (/obstacles/<name>/pose).
+    obstacles: ["scaffold_pole", "tool_cart", "cable_reel"]
+
+    # All three obstacles sit on a ~1.3-1.42 m radius ring around the robot
+    # base (world origin) -- clearly clear of the pedestal (footprint
+    # roughly 0.4-0.5 m) and roughly midway to the panel/its standoff
+    # waypoints (~x=1.59 m for the default d_standoff=0.20 with the panel
+    # at x=1.8), spread apart angularly so the arm has real room to swing
+    # between the base, each obstacle, and the panel, all still comfortably
+    # inside the up-to-1.85 m reach (Table VII).
+
+    # A vertical scaffolding pole: tall and thin, spans most of the panel
+    # height. The one most likely to block a coating pass outright.
+    scaffold_pole:
+      type: "cylinder"
+      frame_id: "world"
+      position: [1.25, 0.55, 1.05]
+      orientation_rpy: [0.0, 0.0, 0.0]
+      size: [0.9, 0.04, 0.0] # cylinder: [height, radius, unused]
+
+    # A waist-height tool cart on the opposite side of the panel: a coarse
+    # box, low enough to only matter for the bottom rows.
+    tool_cart:
+      type: "box"
+      frame_id: "world"
+      position: [1.25, -0.55, 0.55]
+      orientation_rpy: [0.0, 0.0, 0.0]
+      size: [0.35, 0.35, 0.55] # box: [x, y, z]
+
+    # A cable reel near the floor, straight ahead of the base: small and
+    # low, meant to sit mostly clear of the panel's work envelope --
+    # included so the scene isn't just "obstacles that block everything",
+    # matching a cluttered but not impassable real work area.
+    cable_reel:
+      type: "cylinder"
+      frame_id: "world"
+      position: [1.3, 0.0, 0.3]
+      orientation_rpy: [0.0, 0.0, 0.0]
+      size: [0.3, 0.15, 0.0]
+
+    # Table IX: minimum obstacle distance dsafe >= 0.05 m. Used by
+    # perception_sim_node's workspace_clear heuristic together with an extra
+    # margin for the robot/tool footprint (not physically simulated, just a
+    # coarse proxy since real point-cloud processing is out of scope, Sec.
+    # III-B).
+    d_safe: 0.05
+    workspace_clear_margin: 0.15

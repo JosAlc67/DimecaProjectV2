@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot name="abb_irb2600_model" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  
+  <xacro:arg name="table" default="false"/>
+  <xacro:arg name="camera_d435" default="false"/>
+  <xacro:arg name="camera_l515" default="false"/>
+  <xacro:arg name="vacuum_end" default="false"/>
+  <xacro:arg name="ee_marker" default="false"/>
+  <xacro:arg name="garra" default="false"/>
+  <xacro:arg name="base_vacuum_end" default="false"/>
+  <xacro:arg name="base_vacuum_end_wall" default="false"/>
+  
+  <link name="world"/>
+
+  <!-- Robot base 6 joints -->
+  <xacro:include filename="$(find irb2600_description)/urdf/irb2600_macro.xacro"/>
+
+  <xacro:include filename="$(find irb2600_description)/urdf/gazebo.xacro"/>
+
+  <xacro:abb_irb2600 prefix=""/>
+  <xacro:abb_irb2600_gazebo prefix=""/>
+
+  <!-- Robot base support -->
+  <xacro:include filename="$(find irb2600_description)/urdf/robot_base.xacro"/>
+
+  <!-- walls around robot -->
+  <xacro:include filename="$(find irb2600_description)/urdf/wall.xacro"/>
+
+  <!-- table -->
+  <xacro:if value="$(arg table)">
+    <xacro:include filename="$(find irb2600_description)/urdf/table.xacro"/>
+  </xacro:if>
+
+  <!-- robot vacuum gripper -->
+  <xacro:if value="$(arg vacuum_end)">
+    <xacro:include filename="$(find irb2600_description)/urdf/vacuum_end.xacro"/>
+  </xacro:if>
+
+  <!-- camera_d435 -->
+  <xacro:if value="$(arg camera_d435)">
+    <xacro:include filename="$(find irb2600_description)/urdf/camera_d435.xacro"/>
+  </xacro:if>
+
+   <!-- camera_l515-->
+  <xacro:if value="$(arg camera_l515)">
+    <xacro:include filename="$(find irb2600_description)/urdf/camera_l515.xacro"/>
+  </xacro:if>
+
+  <!-- robot marcador end effector -->
+  <xacro:if value="$(arg ee_marker)">
+    <xacro:include filename="$(find irb2600_description)/urdf/ee_marker.xacro"/>
+  </xacro:if>
+
+  <!-- robot Garra End Effector -->
+  <xacro:if value="$(arg garra)">
+    <xacro:include filename="$(find irb2600_description)/urdf/garra.xacro"/>
+  </xacro:if>
+</robot>

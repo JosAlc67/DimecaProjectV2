@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+<robot name="ee_marker" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find abb_resources)/urdf/common_materials.xacro"/>
+  <link
+    name="ee">
+    <inertial>
+      <origin
+        xyz="8.65924565893986E-05 0.0195599698345866 1.93283795397848E-10"
+        rpy="0 0 0" />
+      <mass
+        value="0.0453532792285496" />
+      <inertia
+        ixx="0.000055032"
+        ixy="0.000000016"
+        ixz="0"
+        iyy="0.000014893"
+        iyz="0"
+        izz="0.000054929" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://irb2600_description/meshes/supports/ee_marker.STL" />
+      </geometry>
+      <xacro:material_abb_orange/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0"/>
+      <geometry>
+        <mesh
+          filename="package://irb2600_description/meshes/supports/ee_marker.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="irb2600_ee_joint" type="fixed">
+    <parent link="tool0"/>
+    <child link="ee"/>
+    <origin rpy="1.57 0 0" xyz="0 0 0"/>
+  </joint>
+
+  <!-- end effect point -->
+  <link name="end_effect_point">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.14"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.14"/>
+      <geometry>
+        <box size="0.002 0.002 0.002"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- end effect point -->
+  <joint name="end_effect_point" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="tool0"/>
+    <child link="end_effect_point"/>
+  </joint>
+
+</robot>

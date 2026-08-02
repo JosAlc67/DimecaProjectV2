@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="sim" default="false" />
+    <arg name="robot_ip" default="192.168.125.1" />
+    <arg name="J23_coupled" default="false" doc="If true, compensate for J2-J3 parallel linkage" />
+
+    <arg name="robot" default="false" />
+    <arg name="cable" default="false" />
+    <arg name="vaccum" default="false" />
+    <arg name="marker" default="false" />
+
+    <!-- <group ns="irb120"> -->
+
+    <rosparam command="load" file="$(find irb2600_description)/config/joint_names_irb2600.yaml" />
+
+    <include file="$(find irb2600_description)/launch/robot_interface.launch">
+        <arg name="robot_ip" value="$(arg robot_ip)"/>
+        <!-- <arg name="J23_coupled" value="$(arg J23_coupled)" /> -->
+    </include>
+
+    <!-- The node for merger the ABB and ROBOTIQ gripper joints states -->
+    <!-- <node pkg="irb120_master" type="real_robot_gripper.py" name="ABB_Robotiq_states" output="screen"/> -->
+    
+
+    <!-- Diferent configuration of the robot and grippers in MoveiT -->
+    
+    <include if="$(arg robot)" file="$(find irb2600_description)/launch/real_irb2600_moveit.launch" />
+
+    <include if="$(arg vaccum)" file="$(find irb2600_description)/launch/real_irb120_vaccum_moveit.launch" />
+
+    <include if="$(arg cable)" file="$(find irb2600_description)/launch/real_irb120_cable_moveit.launch" />   
+
+    <include if="$(arg marker)" file="$(find irb2600_description)/launch/real_irb120_marker_moveit.launch" />   
+
+
+    <!-- </group> -->
+
+</launch>

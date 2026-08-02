@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!--
+    Inlined replacement for abb_resources/urdf/common_materials.xacro
+    (ROS-Industrial ABB package, ROS 1 only). Kept minimal on purpose:
+    only the material used by the IRB 2600 meshes.
+  -->
+  <material name="abb_orange">
+    <color rgba="1.0 0.4745 0.0 1.0"/>
+  </material>
+
+  <xacro:macro name="material_abb_orange">
+    <material name="abb_orange"/>
+  </xacro:macro>
+
+</robot>

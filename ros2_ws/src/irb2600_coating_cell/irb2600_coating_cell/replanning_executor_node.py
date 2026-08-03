@@ -268,6 +268,9 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
             self.get_parameter("replanning_time_s").value
         )
         move_goal.request.goal_constraints = [goal_constraints]
+        
+        move_goal.planning_options.plan_only = True
+        move_goal.planning_options.planning_scene_diff.is_diff = True
 
         if not self._move_group_client.wait_for_server(timeout_sec=2.0):
             self.get_logger().error("move_action action server not available.")
@@ -312,9 +315,9 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
             self.get_logger().error("execute_trajectory action server not available.")
             return False
 
-        # Ensure header stamp is updated to current time for ExecuteTrajectory
-        now = self.get_clock().now().to_msg()
-        trajectory.joint_trajectory.header.stamp = now
+        # Ensure header stamp is 0 (start immediately) for ExecuteTrajectory
+        trajectory.joint_trajectory.header.stamp.sec = 0
+        trajectory.joint_trajectory.header.stamp.nanosec = 0
 
         goal = ExecuteTrajectory.Goal()
         goal.trajectory = trajectory

@@ -217,12 +217,9 @@ class SceneSetupNode(Node):
         return frame_id, position, orientation, size, obstacle_type
 
     def _build_collision_objects(self):
-        target_frame, target_position, target_orientation, target_size = self._target_pose()
-        objects = [
-            self._make_box_object(
-                "target_structure", target_frame, target_position, target_orientation, target_size
-            )
-        ]
+        # We no longer add target_structure as a collision object because the user
+        # just wants to reach a point without the panel acting as an obstacle.
+        objects = []
 
         for name in self._obstacle_names:
             frame_id, position, orientation, size, obstacle_type = self._obstacle_pose(name)
@@ -292,10 +289,6 @@ class SceneSetupNode(Node):
         colors = self._object_colors()
         target_frame, target_position, target_orientation, target_size = self._target_pose()
         markers = [
-            self._make_marker(
-                0, "target_structure", target_frame, target_position, target_orientation,
-                target_size, "box", colors["target_structure"],
-            ),
             # Bright, unmistakable dot at the panel's reference/center point
             # (the same point raster_path.py builds the coating sweep from).
             self._make_point_marker(

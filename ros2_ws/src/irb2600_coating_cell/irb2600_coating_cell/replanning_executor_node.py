@@ -56,9 +56,9 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         p = self.get_parameter
         
         self.get_logger().info("Waiting for /structure_pose from perception_sim_node...")
-        # Wait up to 2 seconds for a message from perception_sim_node
+        # Always spin for a short time to process any queued messages from the 5Hz publisher
         elapsed = 0.0
-        while self._latest_target_pose is None and rclpy.ok() and not self._stop_requested() and elapsed < 2.0:
+        while rclpy.ok() and not self._stop_requested() and elapsed < 0.5:
             rclpy.spin_once(self, timeout_sec=0.1)
             elapsed += 0.1
 

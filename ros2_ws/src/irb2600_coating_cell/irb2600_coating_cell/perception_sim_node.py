@@ -111,7 +111,7 @@ class PerceptionSimNode(Node):
         im.header.frame_id = frame_id
         im.name = name
         im.description = f"Drag {name}"
-        im.scale = 0.3
+        im.scale = 2.5
         
         im.pose.position.x = position[0]
         im.pose.position.y = position[1]

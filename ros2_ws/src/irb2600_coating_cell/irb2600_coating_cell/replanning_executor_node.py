@@ -202,7 +202,9 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         oc.weight = 1.0
         
         constraint.position_constraints.append(pc)
-        constraint.orientation_constraints.append(oc)
+        # We comment out the orientation constraint to allow the robot to align to the point
+        # from any direction, not just from the exact front, as requested by the user.
+        # constraint.orientation_constraints.append(oc)
         
         goal.request.goal_constraints = [constraint]
         

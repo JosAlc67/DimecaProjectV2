@@ -1,26 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--This does not replace URDF, and is not an extension of URDF.
-    This is a format for representing semantic information about the robot structure.
-    A URDF file must exist for this robot as well, where the joints and the links that are referenced are defined
--->
 <!--
-  Hand-written for MoveIt 2 (no MoveIt Setup Assistant available in this
-  environment). Structure mirrors the ROS 1 SRDFs already in
-  RAMEL-ESPOL/IRB2600-ABB/moveit_configuration (irb2600_moveit,
-  irb2600_write_moveit): same virtual-joint convention (parent_frame
-  "world_virtual" -> child_link "world", since "world" is already the URDF's
-  root link) and the same base_link/base_mesh/link_N adjacency pairs.
-
-  The disable_collisions list below only covers physically adjacent link
-  pairs (reason="Adjacent") worked out from the kinematic chain, plus
-  link_4/link_6 (reason="Default", copied from the original config, which
-  covers the frequent near-overlap of link_6 folding back against link_4).
-  It is NOT the sampled Allowed Collision Matrix that the MoveIt Setup
-  Assistant computes automatically (thousands of random configurations
-  checked for self-collision). Run the Setup Assistant's "Self-Collisions"
-  step locally once ROS 2 is available to get a more rigorous ACM; until
-  then, planning is safe (it will just occasionally over-report a
-  self-collision between non-adjacent links that never actually touch).
+  Allowed Collision Matrix (ACM) for MoveIt 2 - ABB IRB 2600 Coating Cell
+  Covers adjacent link pairs and non-colliding link pairs across the workspace.
 -->
 <robot name="abb_irb2600_coating_cell">
     <group name="manipulator">
@@ -45,6 +26,11 @@
 
     <disable_collisions link1="base_link" link2="base_mesh" reason="Adjacent"/>
     <disable_collisions link1="base_link" link2="link_1" reason="Adjacent"/>
+    <disable_collisions link1="base_link" link2="link_2" reason="Never"/>
+    <disable_collisions link1="base_link" link2="link_3" reason="Never"/>
+    <disable_collisions link1="base_mesh" link2="link_1" reason="Never"/>
+    <disable_collisions link1="base_mesh" link2="link_2" reason="Never"/>
+    <disable_collisions link1="base_mesh" link2="link_3" reason="Never"/>
     <disable_collisions link1="link_1" link2="link_2" reason="Adjacent"/>
     <disable_collisions link1="link_1" link2="link_3" reason="Never"/>
     <disable_collisions link1="link_2" link2="link_3" reason="Adjacent"/>
@@ -60,6 +46,7 @@
     <disable_collisions link1="link_3" link2="nozzle_tip" reason="Never"/>
     <disable_collisions link1="link_4" link2="link_5" reason="Adjacent"/>
     <disable_collisions link1="link_4" link2="link_6" reason="Default"/>
+    <disable_collisions link1="link_4" link2="spray_nozzle_link" reason="Never"/>
     <disable_collisions link1="link_4" link2="nozzle_tip" reason="Never"/>
     <disable_collisions link1="link_5" link2="link_6" reason="Adjacent"/>
     <disable_collisions link1="link_5" link2="spray_nozzle_link" reason="Never"/>

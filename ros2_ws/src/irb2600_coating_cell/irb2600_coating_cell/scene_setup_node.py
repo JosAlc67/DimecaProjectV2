@@ -104,12 +104,16 @@ class SceneSetupNode(Node):
         # sensor reading has arrived yet, so its <name>.* parameters above
         # are used instead.
         self._sensor_obstacle_poses = {}
+        self._sensor_target_pose = None
         self._workspace_clear = None
 
         self._apply_scene_client = self.create_client(
             ApplyPlanningScene, "apply_planning_scene"
         )
         self.create_service(Trigger, "~/refresh_scene", self._on_refresh_scene)
+        
+        self.create_subscription(PoseStamped, "structure_pose", self._on_structure_pose, 10)
+        
         for name in self._obstacle_names:
             self.create_subscription(
                 PoseStamped,
@@ -124,13 +128,6 @@ class SceneSetupNode(Node):
         self._marker_pub = self.create_publisher(
             MarkerArray, "~/scene_markers", transient_local_qos
         )
-        # TRANSIENT_LOCAL only makes a publisher's last message "sticky" for
-        # subscribers that *also* request TRANSIENT_LOCAL durability; RViz's
-        # MarkerArray display does not by default, so a one-shot publish can
-        # be missed by a RViz session that connects afterwards (observed:
-        # markers visible on one bringup, gone on the next, depending on
-        # process startup timing). Republishing periodically sidesteps that
-        # regardless of any subscriber QoS/timing details.
         self.create_timer(2.0, self._publish_markers)
 
         self.get_logger().info(
@@ -186,11 +183,16 @@ class SceneSetupNode(Node):
     def _target_pose(self):
         p = self.get_parameter
         frame_id = p("target_structure.frame_id").value
-        position = [float(v) for v in p("target_structure.position").value]
-        orientation = quaternion_from_rpy(
-            *[float(v) for v in p("target_structure.orientation_rpy").value]
-        )
         size = p("target_structure.size").value
+        
+        if self._sensor_target_pose is not None:
+            position = [self._sensor_target_pose.position.x, self._sensor_target_pose.position.y, self._sensor_target_pose.position.z]
+            orientation = self._sensor_target_pose.orientation
+        else:
+            position = [float(v) for v in p("target_structure.position").value]
+            orientation = quaternion_from_rpy(
+                *[float(v) for v in p("target_structure.orientation_rpy").value]
+            )
         return frame_id, position, orientation, size
 
     def _obstacle_pose(self, name):
@@ -361,6 +363,26 @@ class SceneSetupNode(Node):
             state = "clear" if msg.data else "NOT clear (obstacle nearby)"
             self.get_logger().info(f"Perception: workspace_clear -> {state}.")
         self._workspace_clear = msg.data
+
+    def _on_structure_pose(self, msg):
+        new_position = (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)
+        previous = self._sensor_target_pose
+        first_reading = previous is None
+        moved = True
+        if not first_reading:
+            old = previous.position
+            moved = max(abs(n - o) for n, o in zip(new_position, (old.x, old.y, old.z))) > 0.01
+
+        self._sensor_target_pose = msg.pose
+
+        if first_reading or moved:
+            x, y, z = new_position
+            if first_reading:
+                msg_text = f"Perception: first reading for 'target_structure' at ({x:.3f}, {y:.3f}, {z:.3f})"
+            else:
+                msg_text = f"Perception: 'target_structure' moved to ({x:.3f}, {y:.3f}, {z:.3f})"
+            self.get_logger().info(f"{msg_text} -- refreshing planning scene.")
+            self._apply_scene()
 
     def _on_sensor_obstacle_pose(self, name, msg):
         new_position = (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)

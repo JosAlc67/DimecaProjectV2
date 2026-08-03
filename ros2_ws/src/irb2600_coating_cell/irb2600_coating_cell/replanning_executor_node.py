@@ -6,14 +6,14 @@ y recalculará automáticamente una nueva ruta 3D para rodearlo hasta llegar al 
 import time
 import math
 import rclpy
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose, PoseStamped
 from moveit_msgs.action import MoveGroup
 from moveit_msgs.msg import Constraints, PositionConstraint, OrientationConstraint, BoundingVolume
 from shape_msgs.msg import SolidPrimitive
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
-from irb2600_coating_cell.geometry_utils import quaternion_with_z_axis
+from irb2600_coating_cell.geometry_utils import quaternion_with_z_axis, rotate_vector_by_quaternion
 from irb2600_coating_cell.stoppable import StoppableActionNode
 
 # MoveIt error codes
@@ -41,18 +41,36 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         self.declare_parameter("replanning_time_s", 10.0)
         self.declare_parameter("replanning_attempts", 10)
 
+        self._latest_target_pose = None
+        self.create_subscription(PoseStamped, "structure_pose", self._on_structure_pose, 10)
+
         self._move_group_client = ActionClient(self, MoveGroup, "move_action")
         self.get_logger().info("Waiting for /move_action (move_group)...")
         self._move_group_client.wait_for_server()
+
+    def _on_structure_pose(self, msg):
+        self._latest_target_pose = msg
 
     def run_to_target(self):
         self._clear_stop()
         p = self.get_parameter
         
-        # Build target pose based on the structure's position + standoff distance
-        frame_id = p("target_structure.frame_id").value
-        pos = p("target_structure.position").value
-        normal = p("target_structure.local_normal").value
+        if self._latest_target_pose:
+            frame_id = self._latest_target_pose.header.frame_id
+            pos = [
+                self._latest_target_pose.pose.position.x,
+                self._latest_target_pose.pose.position.y,
+                self._latest_target_pose.pose.position.z,
+            ]
+            target_quat = self._latest_target_pose.pose.orientation
+            normal = p("target_structure.local_normal").value
+            # Rotate normal if the target structure was rotated
+            normal = rotate_vector_by_quaternion(normal, target_quat)
+        else:
+            frame_id = p("target_structure.frame_id").value
+            pos = p("target_structure.position").value
+            normal = p("target_structure.local_normal").value
+            
         d_standoff = p("d_standoff").value
         
         target_pose = Pose()

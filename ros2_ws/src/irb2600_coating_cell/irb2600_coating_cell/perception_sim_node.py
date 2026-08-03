@@ -23,6 +23,8 @@ from irb2600_coating_cell.geometry_utils import (
     quaternion_from_rpy,
     rotate_vector_by_quaternion,
 )
+from interactive_markers.interactive_marker_server import InteractiveMarkerServer
+from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl
 
 
 def create_point_cloud_2(header, points):
@@ -83,17 +85,90 @@ class PerceptionSimNode(Node):
             PointCloud2, "/camera/depth/color/points", 10
         )
 
+        self._dynamic_poses = {}
+        self._im_server = InteractiveMarkerServer(self, "perception_markers")
+        self._init_interactive_markers()
+
         rate_hz = float(self.get_parameter("publish_rate_hz").value)
         self._timer = self.create_timer(1.0 / rate_hz, self._on_timer)
+
+    def _init_interactive_markers(self):
+        # Create a marker for each obstacle
+        for name in self._obstacle_names:
+            pos = [float(v) for v in self.get_parameter(f"{name}.position").value]
+            rpy = [float(v) for v in self.get_parameter(f"{name}.orientation_rpy").value]
+            self._create_6dof_marker(name, self.get_parameter(f"{name}.frame_id").value, pos, rpy)
+            
+        # Create a marker for the target structure
+        pos = [float(v) for v in self.get_parameter("target_structure.position").value]
+        rpy = [float(v) for v in self.get_parameter("target_structure.orientation_rpy").value]
+        self._create_6dof_marker("target_structure", self.get_parameter("target_structure.frame_id").value, pos, rpy)
+        
+        self._im_server.applyChanges()
+
+    def _create_6dof_marker(self, name, frame_id, position, rpy):
+        im = InteractiveMarker()
+        im.header.frame_id = frame_id
+        im.name = name
+        im.description = f"Drag {name}"
+        im.scale = 0.3
+        
+        im.pose.position.x = position[0]
+        im.pose.position.y = position[1]
+        im.pose.position.z = position[2]
+        im.pose.orientation = quaternion_from_rpy(*rpy)
+
+        # Move 3D control
+        control = InteractiveMarkerControl()
+        control.always_visible = True
+        control.orientation.w = 1.0
+        control.orientation.x = 1.0
+        control.orientation.y = 0.0
+        control.orientation.z = 0.0
+        control.name = "move_x"
+        control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
+        im.controls.append(control)
+
+        control = InteractiveMarkerControl()
+        control.always_visible = True
+        control.orientation.w = 1.0
+        control.orientation.x = 0.0
+        control.orientation.y = 1.0
+        control.orientation.z = 0.0
+        control.name = "move_z"
+        control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
+        im.controls.append(control)
+
+        control = InteractiveMarkerControl()
+        control.always_visible = True
+        control.orientation.w = 1.0
+        control.orientation.x = 0.0
+        control.orientation.y = 0.0
+        control.orientation.z = 1.0
+        control.name = "move_y"
+        control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
+        im.controls.append(control)
+
+        self._im_server.insert(im, feedback_callback=self._process_feedback)
+
+    def _process_feedback(self, feedback):
+        name = feedback.marker_name
+        self._dynamic_poses[name] = feedback.pose
 
     def _on_timer(self):
         now = self.get_clock().now().to_msg()
         p = self.get_parameter
 
         structure_frame = p("target_structure.frame_id").value
-        structure_pos = p("target_structure.position").value
         structure_rpy = [float(v) for v in p("target_structure.orientation_rpy").value]
-        structure_quat = quaternion_from_rpy(*structure_rpy)
+
+        if "target_structure" in self._dynamic_poses:
+            dynamic_pose = self._dynamic_poses["target_structure"]
+            structure_pos = [dynamic_pose.position.x, dynamic_pose.position.y, dynamic_pose.position.z]
+            structure_quat = dynamic_pose.orientation
+        else:
+            structure_pos = [float(v) for v in p("target_structure.position").value]
+            structure_quat = quaternion_from_rpy(*structure_rpy)
 
         structure_msg = PoseStamped()
         structure_msg.header.stamp = now
@@ -119,9 +194,16 @@ class PerceptionSimNode(Node):
 
         for name in self._obstacle_names:
             obstacle_frame = p(f"{name}.frame_id").value
-            obstacle_pos = [float(v) for v in p(f"{name}.position").value]
-            obstacle_rpy = [float(v) for v in p(f"{name}.orientation_rpy").value]
             obstacle_size = [float(v) for v in p(f"{name}.size").value]
+            
+            if name in self._dynamic_poses:
+                dynamic_pose = self._dynamic_poses[name]
+                obstacle_pos = [dynamic_pose.position.x, dynamic_pose.position.y, dynamic_pose.position.z]
+                obs_quat = dynamic_pose.orientation
+            else:
+                obstacle_pos = [float(v) for v in p(f"{name}.position").value]
+                obstacle_rpy = [float(v) for v in p(f"{name}.orientation_rpy").value]
+                obs_quat = quaternion_from_rpy(*obstacle_rpy)
 
             obstacle_msg = PoseStamped()
             obstacle_msg.header.stamp = now
@@ -131,11 +213,10 @@ class PerceptionSimNode(Node):
                 obstacle_msg.pose.position.y,
                 obstacle_msg.pose.position.z,
             ) = obstacle_pos
-            obstacle_msg.pose.orientation = quaternion_from_rpy(*obstacle_rpy)
+            obstacle_msg.pose.orientation = obs_quat
             self._obstacle_pubs[name].publish(obstacle_msg)
 
             # Sample surface 3D points for this obstacle to feed Octomap
-            obs_quat = quaternion_from_rpy(*obstacle_rpy)
             obstacle_type = self.get_parameter(f"{name}.type").value
             if obstacle_type == "cylinder":
                 obs_pts = self._sample_cylinder_surface_points(obstacle_pos, obs_quat, obstacle_size)

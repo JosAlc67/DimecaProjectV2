@@ -14,3 +14,4 @@ point_cloud_sensor:
   max_update_rate: 10.0
   filtered_subsample: 1
   filtered_cloud_topic: filtered_cloud
+  transform_tolerance: 0.5

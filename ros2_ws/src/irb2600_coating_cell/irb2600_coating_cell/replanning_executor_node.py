@@ -140,21 +140,41 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
             f"Row {idx + 1} blocked (fraction={fraction:.3f}, checked in "
             f"{t_plan:.3f} s). Replanning around it..."
         )
-        seed = self._extract_last_joint_state(trajectory)
-        t0 = time.time()
-        replanned_trajectory = self._replan_row(row, idx, seed, fraction)
-        t_replan = time.time() - t0
+        
+        safe_t = fraction - 0.05
+        if safe_t > 0.05:
+            start_pose, end_pose = row[0], row[-1]
+            safe_pose = Pose()
+            safe_pose.position.x = start_pose.position.x + safe_t * (end_pose.position.x - start_pose.position.x)
+            safe_pose.position.y = start_pose.position.y + safe_t * (end_pose.position.y - start_pose.position.y)
+            safe_pose.position.z = start_pose.position.z + safe_t * (end_pose.position.z - start_pose.position.z)
+            safe_pose.orientation = end_pose.orientation
+            
+            safe_fraction, safe_traj = self._compute_cartesian_segment([start_pose, safe_pose])
+            if safe_fraction >= 0.99:
+                self.get_logger().info(f"Row {idx + 1}: executing safe Cartesian path up to t={safe_t:.3f} (spray ON)")
+                if not self._execute_with_spray(safe_traj):
+                    metrics["failed"] += 1
+                    return False
+
+        self.get_logger().info(f"Row {idx + 1}: executing joint-space bypass to the end of the row (spray OFF).")
+        t0_replan = time.time()
+        bypass_trajectory = self._attempt_replan_at(row, idx, None, 1.0)
+        t_replan = time.time() - t0_replan
         metrics["total_replan_time_s"] += t_replan
 
-        if replanned_trajectory is None:
+        if bypass_trajectory is None:
+            self.get_logger().error(f"Row {idx + 1}: failed to find bypass.")
             metrics["failed"] += 1
             return False
 
         self.get_logger().info(
-            f"Row {idx + 1}: replanned successfully (t_replan={t_replan:.3f} s)."
+            f"Row {idx + 1}: bypass planned successfully (t_replan={t_replan:.3f} s)."
         )
         metrics["replanned"] += 1
-        return self._execute_with_spray(replanned_trajectory)
+        
+        # Execute bypass WITHOUT spray
+        return self._execute_trajectory(bypass_trajectory)
 
     def _compute_cartesian_segment(self, row):
         request = GetCartesianPath.Request()
@@ -171,42 +191,6 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
         rclpy.spin_until_future_complete(self, future)
         response = future.result()
         return response.fraction, response.solution
-
-    @staticmethod
-    def _extract_last_joint_state(trajectory):
-        points = trajectory.joint_trajectory.points
-        if not points:
-            return None
-        return list(trajectory.joint_trajectory.joint_names), list(points[-1].positions)
-
-    _REPLAN_MARGINS = [0.05, 0.10, 0.20, 0.35]
-
-    def _replan_row(self, row, idx, seed, fraction):
-        # 1. Attempt 3D joint-space bypass to jump PAST the obstacle (ideally to the end of the row)
-        for target_t in [1.0, 0.75, 0.5]:
-            if target_t > fraction:
-                self.get_logger().info(
-                    f"Row {idx + 1}: attempting 3D joint-space bypass to t={target_t:.3f}."
-                )
-                trajectory = self._attempt_replan_at(row, idx, seed, target_t)
-                if trajectory is not None:
-                    return trajectory
-
-        # 2. If completely blocked from going forward, attempt backing off from partial Cartesian path
-        for margin in self._REPLAN_MARGINS:
-            target_t = fraction - margin
-            if target_t > 0.0:
-                self.get_logger().info(
-                    f"Row {idx + 1}: trying replan target at t={target_t:.3f} (margin={margin:.2f})."
-                )
-                trajectory = self._attempt_replan_at(row, idx, seed, target_t)
-                if trajectory is not None:
-                    return trajectory
-
-        self.get_logger().error(
-            f"Row {idx + 1}: no safe replanning trajectory found (fraction={fraction:.3f})."
-        )
-        return None
 
     def _attempt_replan_at(self, row, idx, seed, target_t):
         start, end = row[0], row[-1]

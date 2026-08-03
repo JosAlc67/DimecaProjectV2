@@ -38,8 +38,8 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         self.declare_parameter("group_name", "manipulator")
         self.declare_parameter("tcp_link", "nozzle_tip")
         self.declare_parameter("execute", False)
-        self.declare_parameter("replanning_time_s", 2.0)
-        self.declare_parameter("replanning_attempts", 5)
+        self.declare_parameter("replanning_time_s", 10.0)
+        self.declare_parameter("replanning_attempts", 10)
 
         self._move_group_client = ActionClient(self, MoveGroup, "move_action")
         self.get_logger().info("Waiting for /move_action (move_group)...")

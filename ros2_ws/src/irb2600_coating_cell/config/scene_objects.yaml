@@ -44,33 +44,33 @@
     bottom_wall:
       type: "box"
       frame_id: "world"
-      position: [1.0, 0.0, 0.4]
+      position: [1.2, 0.0, 0.25]
       orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.1, 1.5, 0.8]
+      size: [0.1, 2.0, 0.5]
 
     # Top wall: forces the arm to stay low
     top_wall:
       type: "box"
       frame_id: "world"
-      position: [1.0, 0.0, 1.8]
+      position: [1.2, 0.0, 1.9]
       orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.1, 1.5, 0.6]
+      size: [0.1, 2.0, 0.8]
 
     # Left pillar: restricts movement to the right
     left_pillar:
       type: "box"
       frame_id: "world"
-      position: [1.0, 0.5, 1.15]
+      position: [1.2, 0.7, 1.15]
       orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.1, 0.4, 0.7]
+      size: [0.1, 0.6, 0.9]
 
     # Right pillar: restricts movement to the left
     right_pillar:
       type: "box"
       frame_id: "world"
-      position: [1.0, -0.5, 1.15]
+      position: [1.2, -0.7, 1.15]
       orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.1, 0.4, 0.7]
+      size: [0.1, 0.6, 0.9]
 
     # An extra pole near the target to make the final approach tricky
     back_pole:

@@ -12,6 +12,7 @@ from moveit_msgs.msg import Constraints, PositionConstraint, OrientationConstrai
 from shape_msgs.msg import SolidPrimitive
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 
 from irb2600_coating_cell.geometry_utils import quaternion_with_z_axis, rotate_vector_by_quaternion
 from irb2600_coating_cell.stoppable import StoppableActionNode
@@ -42,7 +43,8 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         self.declare_parameter("replanning_attempts", 10)
 
         self._latest_target_pose = None
-        self.create_subscription(PoseStamped, "structure_pose", self._on_structure_pose, 10)
+        qos = QoSProfile(depth=1, history=HistoryPolicy.KEEP_LAST)
+        self.create_subscription(PoseStamped, "structure_pose", self._on_structure_pose, qos)
 
         self._move_group_client = ActionClient(self, MoveGroup, "move_action")
         self.get_logger().info("Waiting for /move_action (move_group)...")

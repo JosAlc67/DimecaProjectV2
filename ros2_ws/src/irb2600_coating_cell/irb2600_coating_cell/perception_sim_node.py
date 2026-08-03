@@ -62,6 +62,7 @@ class PerceptionSimNode(Node):
 
         for name in self._obstacle_names:
             self.declare_parameter(f"{name}.frame_id", "world")
+            self.declare_parameter(f"{name}.type", "box")
             self.declare_parameter(f"{name}.position", [0.5, 0.3, 1.0])
             self.declare_parameter(f"{name}.orientation_rpy", [0.0, 0.0, 0.0])
             self.declare_parameter(f"{name}.size", [0.15, 0.15, 0.8])

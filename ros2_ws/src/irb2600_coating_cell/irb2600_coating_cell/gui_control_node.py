@@ -83,7 +83,7 @@ class ControlPanelApp:
 
     def _on_start_route(self):
         self._run_in_background(
-            "Running route...", self._replanning_node, self._replanning_node.run_route
+            "Running route...", self._replanning_node, self._replanning_node.run_to_target
         )
 
     def _on_stop(self):

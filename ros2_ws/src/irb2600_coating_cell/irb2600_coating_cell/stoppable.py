@@ -25,10 +25,6 @@ class StoppableActionNode:
         blocking wait loop to return early. Safe to call even if nothing
         is running."""
         self._stop_event.set()
-        goal_handle = self._active_goal_handle
-        if goal_handle is not None:
-            self.get_logger().warn("Stop requested: cancelling in-progress goal...")
-            goal_handle.cancel_goal_async()
 
     def _clear_stop(self):
         self._stop_event.clear()
@@ -51,6 +47,7 @@ class StoppableActionNode:
         self._active_goal_handle = goal_handle
         try:
             result_future = goal_handle.get_result_async()
+            cancel_sent = False
             while rclpy.ok():
                 rclpy.spin_until_future_complete(
                     self, result_future, timeout_sec=poll_timeout_s
@@ -58,7 +55,11 @@ class StoppableActionNode:
                 if result_future.done():
                     return result_future.result()
                 if self._stop_requested():
-                    # cancel already sent by request_stop(); keep polling
+                    if not cancel_sent:
+                        self.get_logger().warn("Stop requested: cancelling in-progress goal...")
+                        goal_handle.cancel_goal_async()
+                        cancel_sent = True
+                    # cancel already sent; keep polling
                     # the same future so we still pick up the resulting
                     # CANCELED status instead of abandoning it.
                     continue

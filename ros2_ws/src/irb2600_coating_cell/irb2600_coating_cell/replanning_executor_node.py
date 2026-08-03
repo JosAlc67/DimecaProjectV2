@@ -1,47 +1,5 @@
 """Reactive replanning executor (report Table VI "Replan the trajectory";
 Table XVII Case 3: obstacle changes position dynamically during operation).
-
-Unlike trajectory_planner_node (Phase 1: plans the whole raster once against
-a static obstacle), this node executes the coating raster ROW BY ROW. Before
-each row it re-checks that row's Cartesian path against the *current*
-planning scene:
-
-  - If clear (fraction >= fraction_threshold): execute it directly, exactly
-    like trajectory_planner_node does for the whole path.
-  - If blocked: attempt to replan -- compute IK for the row's end pose,
-    *seeded from the last joint state the blocked Cartesian path actually
-    reached* (not the robot's current/starting state), then ask move_group
-    for a full joint-space (OMPL) plan to that joint goal (which, unlike
-    straight-line Cartesian interpolation, can route around the obstacle).
-    The warm seed matters: KDL (this project's kinematics_solver) is a local
-    numerical IK solver, and on the VM it consistently failed to converge
-    for a row's end pose when seeded from a "cold"/far state -- both via a
-    direct /compute_ik call and via OMPL's own internal goal-constraint
-    sampler ("Unable to sample any valid states for goal tree") -- even
-    though the Cartesian planner could already get ~80% of the way to that
-    same pose by construction (warm-started, incremental steps). Seeding IK
-    from that near-target state converges reliably where a cold seed did
-    not. If that also fails, the row is unreachable: report it as a failed
-    trajectory and stop (Table XVII Case 4), matching Sec. VI-B's "safe
-    robot stop".
-
-Between rows the node pauses for `segment_pause_s` seconds, specifically so
-you can trigger a "controlled change in obstacle position" during that
-window (Table IX: "Replanning type: Discrete/reactive") and watch the next
-row react to it:
-
-    ros2 param set /perception_sim_node scaffold_pole.position "[X, Y, Z]"
-
-(or tool_cart/cable_reel -- the default obstacle names in
-config/scene_objects.yaml; run `ros2 param list /perception_sim_node` to
-see the actual names for your scene). scene_setup_node subscribes to
-perception_sim_node's /obstacles/<name>/pose topics and re-applies the
-planning scene automatically when any of them changes, so that one command
-is enough -- no more manual refresh_scene call needed (that combination is
-still available as a fallback if perception_sim_node isn't running, see
-scene_setup_node's docstring).
-
-    ros2 run irb2600_coating_cell replanning_executor_node --ros-args -p execute:=true
 """
 
 import time
@@ -58,11 +16,7 @@ from std_srvs.srv import SetBool
 from irb2600_coating_cell.raster_path import generate_raster_rows
 from irb2600_coating_cell.stoppable import StoppableActionNode
 
-# Only the arm's own joints go into the IK seed / replanning joint goal.
 _ARM_JOINTS = ["joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"]
-
-# How often the between-rows pause and the stop check re-evaluate
-# request_stop() -- keeps "Stop" responsive without busy-waiting.
 _STOP_POLL_S = 0.1
 
 
@@ -86,19 +40,11 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
         self.declare_parameter("tcp_link", "nozzle_tip")
         self.declare_parameter("execute", False)
 
-        # Minimum compute_cartesian_path fraction to accept a row as clear.
         self.declare_parameter("fraction_threshold", 0.99)
-        # Pause between rows -- the window to manually move the obstacle to
-        # exercise Case 3 (see module docstring).
         self.declare_parameter("segment_pause_s", 3.0)
         self.declare_parameter("replanning_time_s", 2.0)
         self.declare_parameter("replanning_attempts", 5)
         self.declare_parameter("ik_timeout_s", 1.0)
-        # Diagnostic switch: set to false to ask /compute_ik to ignore
-        # collisions for the replanning seed IK. If IK then succeeds, the
-        # row's end pose collides with something (obstacle or self) even
-        # from the warm seed; if it still fails, it is a pure numerical
-        # convergence problem independent of collision checking.
         self.declare_parameter("replan_ik_avoid_collisions", True)
 
         self._cartesian_path_client = self.create_client(
@@ -115,14 +61,7 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
         self._cartesian_path_client.wait_for_service()
         self._ik_client.wait_for_service()
 
-    # -- top-level control loop ----------------------------------------------
-
     def run_route(self):
-        """Plan+execute the whole raster, row by row, with reactive
-        replanning. Public so callers other than main() (e.g. the Tkinter
-        GUI's background thread) can reuse this node instance without
-        re-running __init__'s service/action waits each time. Can be
-        interrupted by request_stop() from another thread."""
         self._clear_stop()
         p = self.get_parameter
         rows, _normal_world = generate_raster_rows(
@@ -167,8 +106,7 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
             if idx < n_rows - 1:
                 self.get_logger().info(
                     f"Row {idx + 1} done. Pausing {segment_pause_s:.1f}s before "
-                    "the next row -- move an obstacle now to test Case 3, e.g.:\n"
-                    '  ros2 param set /perception_sim_node scaffold_pole.position "[0.79, 0.0, 1.0]"'
+                    "the next row..."
                 )
                 self._interruptible_sleep(segment_pause_s)
 
@@ -179,9 +117,6 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
         )
 
     def _interruptible_sleep(self, duration_s):
-        """time.sleep() split into short slices so request_stop() (called
-        from another thread, e.g. the GUI) takes effect within
-        _STOP_POLL_S instead of only after the full pause elapses."""
         elapsed = 0.0
         while elapsed < duration_s and not self._stop_requested():
             step = min(_STOP_POLL_S, duration_s - elapsed)
@@ -203,8 +138,7 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
 
         self.get_logger().warn(
             f"Row {idx + 1} blocked (fraction={fraction:.3f}, checked in "
-            f"{t_plan:.3f} s). Replanning around it (Table VI 'Replan the "
-            "trajectory')..."
+            f"{t_plan:.3f} s). Replanning around it..."
         )
         seed = self._extract_last_joint_state(trajectory)
         t0 = time.time()
@@ -221,8 +155,6 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
         )
         metrics["replanned"] += 1
         return self._execute_with_spray(replanned_trajectory)
-
-    # -- direct Cartesian segment ---------------------------------------------
 
     def _compute_cartesian_segment(self, row):
         request = GetCartesianPath.Request()
@@ -242,83 +174,64 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
 
     @staticmethod
     def _extract_last_joint_state(trajectory):
-        """Names/positions of the last point of a (possibly partial)
-        RobotTrajectory, used as a warm IK seed. None if it has no points."""
         points = trajectory.joint_trajectory.points
         if not points:
             return None
         return list(trajectory.joint_trajectory.joint_names), list(points[-1].positions)
 
-    # -- replanning fallback: IK (warm-seeded) + full joint-space (OMPL) plan --
-
-    # Tried in order until one produces a reachable, collision-free target.
-    # A single small margin isn't always enough: an obstacle can run
-    # alongside a stretch of the row rather than just touching its tail, so
-    # retry further back before giving up (report eq. 5 already frames a
-    # shortened row as the measurable cost of avoidance -- trying harder to
-    # find *some* safe point instead of failing on the first attempt is the
-    # same idea taken further).
     _REPLAN_MARGINS = [0.05, 0.10, 0.20, 0.35]
 
     def _replan_row(self, row, idx, seed, fraction):
+        # 1. Attempt backing off from partial Cartesian path
         for margin in self._REPLAN_MARGINS:
-            target_t = max(0.0, min(fraction - margin, 0.95))
-            if target_t <= 0.0:
-                break
+            target_t = fraction - margin
+            if target_t > 0.0:
+                self.get_logger().info(
+                    f"Row {idx + 1}: trying replan target at t={target_t:.3f} (margin={margin:.2f})."
+                )
+                trajectory = self._attempt_replan_at(row, idx, seed, target_t)
+                if trajectory is not None:
+                    return trajectory
+
+        # 2. If obstacle is near the start of the row, attempt 3D joint-space bypass
+        for target_t in [1.0, 0.75, 0.5]:
             self.get_logger().info(
-                f"Row {idx + 1}: trying replan target at t={target_t:.3f} "
-                f"(margin={margin:.2f})."
+                f"Row {idx + 1}: obstacle near start (fraction={fraction:.3f}), trying 3D joint-space bypass to t={target_t:.3f}."
             )
             trajectory = self._attempt_replan_at(row, idx, seed, target_t)
             if trajectory is not None:
                 return trajectory
 
         self.get_logger().error(
-            f"Row {idx + 1}: no margin in {self._REPLAN_MARGINS} produced a "
-            f"reachable, collision-free replan target (fraction={fraction:.3f})."
+            f"Row {idx + 1}: no safe replanning trajectory found (fraction={fraction:.3f})."
         )
         return None
 
     def _attempt_replan_at(self, row, idx, seed, target_t):
         start, end = row[0], row[-1]
         goal_pose = Pose()
-        goal_pose.position.x = start.position.x + target_t * (
-            end.position.x - start.position.x
-        )
-        goal_pose.position.y = start.position.y + target_t * (
-            end.position.y - start.position.y
-        )
-        goal_pose.position.z = start.position.z + target_t * (
-            end.position.z - start.position.z
-        )
-        # Orientation is constant across a row (and across the whole panel):
-        # raster_path.py computes it once from the panel's surface normal.
+        goal_pose.position.x = start.position.x + target_t * (end.position.x - start.position.x)
+        goal_pose.position.y = start.position.y + target_t * (end.position.y - start.position.y)
+        goal_pose.position.z = start.position.z + target_t * (end.position.z - start.position.z)
         goal_pose.orientation = end.orientation
 
         ik_request = GetPositionIK.Request()
         ik_request.ik_request.group_name = self.get_parameter("group_name").value
         ik_request.ik_request.ik_link_name = self.get_parameter("tcp_link").value
-        ik_request.ik_request.pose_stamped.header.frame_id = self.get_parameter(
-            "target_structure.frame_id"
-        ).value
+        ik_request.ik_request.pose_stamped.header.frame_id = (
+            self.get_parameter("target_structure.frame_id").value
+        )
         ik_request.ik_request.pose_stamped.pose = goal_pose
+        ik_request.ik_request.timeout = rclpy.duration.Duration(
+            seconds=float(self.get_parameter("ik_timeout_s").value)
+        ).to_msg()
         ik_request.ik_request.avoid_collisions = bool(
             self.get_parameter("replan_ik_avoid_collisions").value
         )
+
         if seed is not None:
-            names, positions = seed
-            ik_request.ik_request.robot_state.joint_state.name = names
-            ik_request.ik_request.robot_state.joint_state.position = positions
-            ik_request.ik_request.robot_state.is_diff = False
-        else:
-            # No partial trajectory to seed from (blocked on the very first
-            # interpolation step) -- fall back to the current state.
-            ik_request.ik_request.robot_state.is_diff = True
-        ik_timeout_s = float(self.get_parameter("ik_timeout_s").value)
-        ik_request.ik_request.timeout.sec = int(ik_timeout_s)
-        ik_request.ik_request.timeout.nanosec = int(
-            (ik_timeout_s - int(ik_timeout_s)) * 1e9
-        )
+            ik_request.ik_request.robot_state.joint_state.name = seed[0]
+            ik_request.ik_request.robot_state.joint_state.position = seed[1]
 
         future = self._ik_client.call_async(ik_request)
         rclpy.spin_until_future_complete(self, future)
@@ -331,115 +244,111 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
             )
             return None
 
-        joint_positions = dict(
-            zip(ik_response.solution.joint_state.name, ik_response.solution.joint_state.position)
-        )
+        joint_names = ik_response.solution.joint_state.name
+        joint_positions = ik_response.solution.joint_state.position
+        joint_map = dict(zip(joint_names, joint_positions))
 
-        constraints = Constraints()
-        for joint_name in _ARM_JOINTS:
-            if joint_name not in joint_positions:
-                continue
-            jc = JointConstraint()
-            jc.joint_name = joint_name
-            jc.position = joint_positions[joint_name]
-            jc.tolerance_above = 0.01
-            jc.tolerance_below = 0.01
-            jc.weight = 1.0
-            constraints.joint_constraints.append(jc)
+        goal_constraints = Constraints()
+        for joint in _ARM_JOINTS:
+            if joint in joint_map:
+                jc = JointConstraint()
+                jc.joint_name = joint
+                jc.position = float(joint_map[joint])
+                jc.tolerance_above = 0.01
+                jc.tolerance_below = 0.01
+                jc.weight = 1.0
+                goal_constraints.joint_constraints.append(jc)
 
-        goal = MoveGroup.Goal()
-        goal.request.group_name = self.get_parameter("group_name").value
-        goal.request.start_state.is_diff = True
-        goal.request.num_planning_attempts = int(
+        move_goal = MoveGroup.Goal()
+        move_goal.request.group_name = self.get_parameter("group_name").value
+        move_goal.request.num_planning_attempts = int(
             self.get_parameter("replanning_attempts").value
         )
-        goal.request.allowed_planning_time = float(
+        move_goal.request.allowed_planning_time = float(
             self.get_parameter("replanning_time_s").value
         )
-        goal.request.max_velocity_scaling_factor = 0.5
-        goal.request.max_acceleration_scaling_factor = 0.5
-        goal.request.goal_constraints = [constraints]
-        # Left unset, this defaults to a zero-volume (0,0,0)-(0,0,0) box,
-        # which can make every candidate state look "out of bounds" to
-        # planners/adapters that check it -- easy to miss since it has
-        # nothing to do with the arm's actual joint limits (which come from
-        # joint_limits.yaml/the URDF regardless of this field).
-        frame_id = self.get_parameter("target_structure.frame_id").value
-        goal.request.workspace_parameters.header.frame_id = frame_id
-        goal.request.workspace_parameters.min_corner.x = -3.0
-        goal.request.workspace_parameters.min_corner.y = -3.0
-        goal.request.workspace_parameters.min_corner.z = -3.0
-        goal.request.workspace_parameters.max_corner.x = 3.0
-        goal.request.workspace_parameters.max_corner.y = 3.0
-        goal.request.workspace_parameters.max_corner.z = 3.0
+        move_goal.request.goal_constraints = [goal_constraints]
 
-        # Plan only; we execute separately via /execute_trajectory, same as
-        # the direct-Cartesian path, so both routes share one execution path.
-        goal.planning_options.plan_only = True
-        goal.planning_options.planning_scene_diff.is_diff = True
+        if not self._move_group_client.wait_for_server(timeout_sec=2.0):
+            self.get_logger().error("move_action action server not available.")
+            return None
 
-        self._move_group_client.wait_for_server()
-        send_goal_future = self._move_group_client.send_goal_async(goal)
-        rclpy.spin_until_future_complete(self, send_goal_future)
-        goal_handle = send_goal_future.result()
+        send_future = self._move_group_client.send_goal_async(move_goal)
+        rclpy.spin_until_future_complete(self, send_future)
+        goal_handle = send_future.result()
 
         if not goal_handle.accepted:
-            self.get_logger().error(f"Row {idx + 1}: move_action goal rejected.")
-            return None
-
-        result_future = goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, result_future)
-        result = result_future.result().result
-
-        if result.error_code.val != MoveItErrorCodes.SUCCESS:
             self.get_logger().warn(
-                f"Row {idx + 1}: OMPL could not find a collision-free joint-space "
-                f"path to t={target_t:.3f} (error_code={result.error_code.val})."
+                f"Row {idx + 1}: move_group goal rejected at t={target_t:.3f}."
             )
             return None
 
-        return result.planned_trajectory
+        res_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self, res_future)
+        move_result = res_future.result()
 
-    # -- execution + spray_on -------------------------------------------------
+        if move_result.result.error_code.val != MoveItErrorCodes.SUCCESS:
+            self.get_logger().warn(
+                f"Row {idx + 1}: joint-space planning failed at t={target_t:.3f} "
+                f"(error_code={move_result.result.error_code.val})."
+            )
+            return None
+
+        return move_result.result.planned_trajectory
 
     def _execute_with_spray(self, trajectory):
+        self._set_spray_sync(True)
+        try:
+            return self._execute_trajectory(trajectory)
+        finally:
+            self._set_spray_sync(False)
+
+    def _execute_trajectory(self, trajectory):
         if not self.get_parameter("execute").value:
-            self.get_logger().info(
-                "execute:=false (default): row planned but not sent to the "
-                "controller."
-            )
+            self.get_logger().info("Planning only (execute:=false); skipping move execution.")
             return True
 
-        self._set_spray_sync(True)
+        if not self._execute_client.wait_for_server(timeout_sec=2.0):
+            self.get_logger().error("execute_trajectory action server not available.")
+            return False
 
-        self._execute_client.wait_for_server()
         goal = ExecuteTrajectory.Goal()
         goal.trajectory = trajectory
-        result_response = self._send_goal_and_wait(self._execute_client, goal)
+        send_future = self._execute_client.send_goal_async(goal)
+        rclpy.spin_until_future_complete(self, send_future)
+        goal_handle = send_future.result()
 
-        self._set_spray_sync(False)
-
-        if result_response is None:
-            self.get_logger().error("execute_trajectory goal was rejected.")
+        if not goal_handle.accepted:
+            self.get_logger().error("ExecuteTrajectory goal rejected by controller.")
             return False
-        if self._cancelled(result_response):
-            self.get_logger().warn("Trajectory execution cancelled (Stop).")
-            return False
-        succeeded = self._succeeded(result_response)
-        if not succeeded:
-            self.get_logger().error("Trajectory execution FAILED.")
-        return succeeded
 
-    def _set_spray_sync(self, on):
-        if not self._spray_client.wait_for_service(timeout_sec=2.0):
-            self.get_logger().warn(
-                "spray_controller_node not available; continuing without "
-                "toggling spray_on."
+        res_future = goal_handle.get_result_async()
+        while not res_future.done():
+            if self._stop_requested():
+                self.get_logger().warn("Cancel requested while trajectory is executing.")
+                goal_handle.cancel_goal_async()
+                rclpy.spin_until_future_complete(self, res_future)
+                return False
+            time.sleep(_STOP_POLL_S)
+
+        result = res_future.result()
+        if result.result.error_code.val != MoveItErrorCodes.SUCCESS:
+            self.get_logger().error(
+                f"Trajectory execution failed with error_code={result.result.error_code.val}."
+            )
+            return False
+
+        return True
+
+    def _set_spray_sync(self, enable: bool):
+        if not self._spray_client.service_is_ready():
+            self.get_logger().warn_once(
+                "spray_controller_node not available; continuing without toggling spray_on."
             )
             return
-        request = SetBool.Request()
-        request.data = on
-        future = self._spray_client.call_async(request)
+        req = SetBool.Request()
+        req.data = enable
+        future = self._spray_client.call_async(req)
         rclpy.spin_until_future_complete(self, future)
 
     def _stop_spray_sync(self):
@@ -449,9 +358,11 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
 def main(args=None):
     rclpy.init(args=args)
     node = ReplanningExecutorNode()
-    node.run_route()
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        node.run_route()
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

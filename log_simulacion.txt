@@ -1,0 +1,387 @@
+[INFO] [launch]: All log files can be found below /home/josuealcivar/.ros/log/2026-08-02-22-20-44-539278-josuealcivar-virtual-machine-105930
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [static_transform_publisher-1]: process started with pid [105933]
+[INFO] [robot_state_publisher-2]: process started with pid [105935]
+[INFO] [move_group-3]: process started with pid [105937]
+[INFO] [rviz2-4]: process started with pid [105939]
+[INFO] [ros2_control_node-5]: process started with pid [105941]
+[INFO] [spawner-6]: process started with pid [105947]
+[INFO] [spawner-7]: process started with pid [105954]
+[INFO] [scene_setup_node-8]: process started with pid [105959]
+[INFO] [perception_sim_node-9]: process started with pid [105965]
+[INFO] [spray_controller_node-10]: process started with pid [105970]
+[static_transform_publisher-1] [INFO] [1785727245.521565031] [static_transform_publisher0]: Spinning until stopped - publishing transform
+[static_transform_publisher-1] translation: ('0.000000', '0.000000', '0.000000')
+[static_transform_publisher-1] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-1] from 'world_virtual' to 'world'
+[rviz2-4] Warning: Ignoring XDG_SESSION_TYPE=wayland on Gnome. Use QT_QPA_PLATFORM=wayland to run on Wayland anyway.
+[robot_state_publisher-2] [INFO] [1785727245.553063835] [robot_state_publisher]: got segment base
+[robot_state_publisher-2] [INFO] [1785727245.555432342] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-2] [INFO] [1785727245.555463992] [robot_state_publisher]: got segment base_mesh
+[robot_state_publisher-2] [INFO] [1785727245.555471729] [robot_state_publisher]: got segment flange
+[robot_state_publisher-2] [INFO] [1785727245.555583562] [robot_state_publisher]: got segment link_1
+[robot_state_publisher-2] [INFO] [1785727245.555591593] [robot_state_publisher]: got segment link_2
+[robot_state_publisher-2] [INFO] [1785727245.559018398] [robot_state_publisher]: got segment link_3
+[robot_state_publisher-2] [INFO] [1785727245.559055071] [robot_state_publisher]: got segment link_4
+[robot_state_publisher-2] [INFO] [1785727245.559062252] [robot_state_publisher]: got segment link_5
+[robot_state_publisher-2] [INFO] [1785727245.559068859] [robot_state_publisher]: got segment link_6
+[robot_state_publisher-2] [INFO] [1785727245.559075166] [robot_state_publisher]: got segment nozzle_tip
+[robot_state_publisher-2] [INFO] [1785727245.559081542] [robot_state_publisher]: got segment spray_nozzle_link
+[robot_state_publisher-2] [INFO] [1785727245.559561830] [robot_state_publisher]: got segment tool0
+[robot_state_publisher-2] [INFO] [1785727245.559573423] [robot_state_publisher]: got segment world
+[ros2_control_node-5] [WARN] [1785727245.615784095] [controller_manager]: [Deprecated] Passing the robot description parameter directly to the control_manager node is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.
+[ros2_control_node-5] [INFO] [1785727245.616034193] [resource_manager]: Loading hardware 'IRB2600System' 
+[ros2_control_node-5] [INFO] [1785727245.616487490] [resource_manager]: Initialize hardware 'IRB2600System' 
+[ros2_control_node-5] [INFO] [1785727245.616572496] [resource_manager]: Successful initialization of hardware 'IRB2600System'
+[ros2_control_node-5] [INFO] [1785727245.618413426] [resource_manager]: 'configure' hardware 'IRB2600System' 
+[ros2_control_node-5] [INFO] [1785727245.618433318] [resource_manager]: Successful 'configure' of hardware 'IRB2600System'
+[ros2_control_node-5] [INFO] [1785727245.618440655] [resource_manager]: 'activate' hardware 'IRB2600System' 
+[ros2_control_node-5] [INFO] [1785727245.618446636] [resource_manager]: Successful 'activate' of hardware 'IRB2600System'
+[ros2_control_node-5] [INFO] [1785727245.640629854] [controller_manager]: update rate is 100 Hz
+[ros2_control_node-5] [INFO] [1785727245.640671858] [controller_manager]: Spawning controller_manager RT thread with scheduler priority: 50
+[ros2_control_node-5] [WARN] [1785727245.640811480] [controller_manager]: Could not enable FIFO RT scheduling policy: with error number <1>(Operation not permitted). See [https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] for details on how to enable realtime scheduling.
+[move_group-3] [INFO] [1785727245.679655300] [moveit_rdf_loader.rdf_loader]: Loaded robot model in 0.00838522 seconds
+[move_group-3] [INFO] [1785727245.679720072] [moveit_robot_model.robot_model]: Loading robot model 'abb_irb2600_coating_cell'...
+[move_group-3] [WARN] [1785727245.739386628] [moveit_robot_model.robot_model]: Link nozzle_tip has visual geometry but no collision geometry. Collision geometry will be left empty. Fix your URDF file by explicitly specifying collision geometry.
+[move_group-3] [INFO] [1785727245.958856333] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Publishing maintained planning scene on 'monitored_planning_scene'
+[move_group-3] [INFO] [1785727245.959008610] [moveit.ros_planning_interface.moveit_cpp]: Listening to 'joint_states' for joint states
+[move_group-3] [INFO] [1785727245.959485005] [moveit_ros.current_state_monitor]: Listening to joint states on topic 'joint_states'
+[move_group-3] [INFO] [1785727245.959732914] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Listening to '/attached_collision_object' for attached collision objects
+[move_group-3] [INFO] [1785727245.959746839] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Starting planning scene monitor
+[move_group-3] [INFO] [1785727245.959900762] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Listening to '/planning_scene'
+[move_group-3] [INFO] [1785727245.959910195] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Starting world geometry update monitor for collision objects, attached objects, octomap updates.
+[move_group-3] [INFO] [1785727245.960074671] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Listening to 'collision_object'
+[move_group-3] [INFO] [1785727245.960230007] [moveit_ros.planning_scene_monitor.planning_scene_monitor]: Listening to 'planning_scene_world' for planning scene world geometry
+[move_group-3] [WARN] [1785727245.969396250] [moveit.ros.occupancy_map_monitor.middleware_handle]: Resolution not specified for Octomap. Assuming resolution = 0.1 instead
+[move_group-3] [INFO] [1785727246.171504039] [moveit.ros.perception.pointcloud_octomap_updater]: Listening to '/camera/depth/color/points' using message filter with target frame 'world '
+[move_group-3] [INFO] [1785727246.171534355] [moveit.ros_planning_interface.moveit_cpp]: Loading planning pipeline 'ompl'
+[move_group-3] [INFO] [1785727246.204812925] [moveit.ros_planning.planning_pipeline]: Using planning interface 'OMPL'
+[move_group-3] [INFO] [1785727246.213895739] [moveit_ros.add_time_optimal_parameterization]: Param 'ompl.path_tolerance' was not set. Using default value: 0.100000
+[move_group-3] [INFO] [1785727246.213932516] [moveit_ros.add_time_optimal_parameterization]: Param 'ompl.resample_dt' was not set. Using default value: 0.100000
+[move_group-3] [INFO] [1785727246.213938527] [moveit_ros.add_time_optimal_parameterization]: Param 'ompl.min_angle_change' was not set. Using default value: 0.001000
+[move_group-3] [INFO] [1785727246.213957745] [moveit_ros.fix_workspace_bounds]: Param 'ompl.default_workspace_bounds' was not set. Using default value: 10.000000
+[move_group-3] [INFO] [1785727246.213972055] [moveit_ros.fix_start_state_bounds]: Param 'ompl.start_state_max_bounds_error' was set to 0.100000
+[move_group-3] [INFO] [1785727246.213978505] [moveit_ros.fix_start_state_bounds]: Param 'ompl.start_state_max_dt' was not set. Using default value: 0.500000
+[move_group-3] [INFO] [1785727246.213989241] [moveit_ros.fix_start_state_collision]: Param 'ompl.start_state_max_dt' was not set. Using default value: 0.500000
+[move_group-3] [INFO] [1785727246.213995340] [moveit_ros.fix_start_state_collision]: Param 'ompl.jiggle_fraction' was set to 0.050000
+[move_group-3] [INFO] [1785727246.214001779] [moveit_ros.fix_start_state_collision]: Param 'ompl.max_sampling_attempts' was not set. Using default value: 100
+[move_group-3] [INFO] [1785727246.214012447] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Add Time Optimal Parameterization'
+[move_group-3] [INFO] [1785727246.214017660] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Resolve constraint frames to robot links'
+[move_group-3] [INFO] [1785727246.214021973] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Fix Workspace Bounds'
+[move_group-3] [INFO] [1785727246.214026351] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Fix Start State Bounds'
+[move_group-3] [INFO] [1785727246.214030625] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Fix Start State In Collision'
+[move_group-3] [INFO] [1785727246.214034946] [moveit.ros_planning.planning_pipeline]: Using planning request adapter 'Fix Start State Path Constraints'
+[move_group-3] [INFO] [1785727246.313533321] [moveit.plugins.moveit_simple_controller_manager]: Added FollowJointTrajectory controller for irb2600_arm_controller
+[move_group-3] [INFO] [1785727246.313688360] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727246.313708023] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727246.317784317] [moveit_ros.trajectory_execution_manager]: Trajectory execution is managing controllers
+[move_group-3] [INFO] [1785727246.317809694] [move_group.move_group]: MoveGroup debug mode is ON
+[move_group-3] [INFO] [1785727246.386614987] [move_group.move_group]: 
+[move_group-3] 
+[move_group-3] ********************************************************
+[move_group-3] * MoveGroup using: 
+[move_group-3] *     - ApplyPlanningSceneService
+[move_group-3] *     - ClearOctomapService
+[move_group-3] *     - CartesianPathService
+[move_group-3] *     - ExecuteTrajectoryAction
+[move_group-3] *     - GetPlanningSceneService
+[move_group-3] *     - KinematicsService
+[move_group-3] *     - MoveAction
+[move_group-3] *     - MotionPlanService
+[move_group-3] *     - QueryPlannersService
+[move_group-3] *     - StateValidationService
+[move_group-3] ********************************************************
+[move_group-3] 
+[move_group-3] [INFO] [1785727246.386671222] [moveit_move_group_capabilities_base.move_group_context]: MoveGroup context using planning plugin ompl_interface/OMPLPlanner
+[move_group-3] [INFO] [1785727246.386682330] [moveit_move_group_capabilities_base.move_group_context]: MoveGroup context initialization complete
+[move_group-3] [96mLoading 'move_group/ApplyPlanningSceneService'...
+[move_group-3] [0m[96mLoading 'move_group/ClearOctomapService'...
+[move_group-3] [0m[96mLoading 'move_group/MoveGroupCartesianPathService'...
+[move_group-3] [0m[96mLoading 'move_group/MoveGroupExecuteTrajectoryAction'...
+[move_group-3] [0m[96mLoading 'move_group/MoveGroupGetPlanningSceneService'...
+[move_group-3] [0m[96mLoading 'move_group/MoveGroupKinematicsService'...
+[move_group-3] [0m[96mLoading 'move_group/MoveGroupMoveAction'...
+[move_group-3] [0m[96mLoading 'move_group/MoveGroupPlanService'...
+[move_group-3] [0m[96mLoading 'move_group/MoveGroupQueryPlannersService'...
+[move_group-3] [0m[96mLoading 'move_group/MoveGroupStateValidationService'...
+[move_group-3] [0m[92m
+[move_group-3] You can start planning now!
+[move_group-3] 
+[rviz2-4] [INFO] [1785727246.436403324] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-4] [INFO] [1785727246.436505917] [rviz2]: OpenGl version: 4.3 (GLSL 4.3)
+[rviz2-4] [INFO] [1785727246.525011218] [rviz2]: Stereo is NOT SUPPORTED
+[ros2_control_node-5] [INFO] [1785727247.196459500] [controller_manager]: Loading controller 'irb2600_arm_controller'
+[ros2_control_node-5] [WARN] [1785727247.223339588] [irb2600_arm_controller]: [Deprecated]: "allow_nonzero_velocity_at_trajectory_end" is set to true. The default behavior will change to false.
+[rviz2-4] [ERROR] [1785727247.232936109] [rviz2]: The link link_1 is has unrealistic inertia, so the equivalent inertia box will not be shown.
+[rviz2-4] 
+[spawner-6] [INFO] [1785727247.254655257] [spawner_irb2600_arm_controller]: [94mLoaded [1mirb2600_arm_controller[0m
+[ros2_control_node-5] [INFO] [1785727247.258776645] [controller_manager]: Configuring controller 'irb2600_arm_controller'
+[ros2_control_node-5] [INFO] [1785727247.259396909] [irb2600_arm_controller]: No specific joint names are used for command interfaces. Using 'joints' parameter.
+[ros2_control_node-5] [INFO] [1785727247.259435244] [irb2600_arm_controller]: Command interfaces are [position] and state interfaces are [position velocity].
+[ros2_control_node-5] [INFO] [1785727247.259457371] [irb2600_arm_controller]: Using 'splines' interpolation method.
+[rviz2-4] [ERROR] [1785727247.259987600] [rviz2]: The link link_2 is has unrealistic inertia, so the equivalent inertia box will not be shown.
+[rviz2-4] 
+[ros2_control_node-5] [INFO] [1785727247.263149027] [irb2600_arm_controller]: Controller state will be published at 50.00 Hz.
+[ros2_control_node-5] [INFO] [1785727247.270459029] [irb2600_arm_controller]: Action status changes will be monitored at 20.00 Hz.
+[spawner-6] [INFO] [1785727247.312774061] [spawner_irb2600_arm_controller]: [92mConfigured and activated [1mirb2600_arm_controller[0m
+[rviz2-4] [ERROR] [1785727247.456710274] [rviz2]: The link link_3 is has unrealistic inertia, so the equivalent inertia box will not be shown.
+[rviz2-4] 
+[spray_controller_node-10] [INFO] [1785727247.516465106] [spray_controller_node]: spray_controller_node ready, spray_on = false
+[ros2_control_node-5] [INFO] [1785727247.555890985] [controller_manager]: Loading controller 'joint_state_broadcaster'
+[spawner-7] [INFO] [1785727247.631695867] [spawner_joint_state_broadcaster]: [94mLoaded [1mjoint_state_broadcaster[0m
+[ros2_control_node-5] [INFO] [1785727247.636751124] [controller_manager]: Configuring controller 'joint_state_broadcaster'
+[ros2_control_node-5] [INFO] [1785727247.636843536] [joint_state_broadcaster]: 'joints' or 'interfaces' parameter is empty. All available state interfaces will be published
+[INFO] [spawner-6]: process has finished cleanly [pid 105947]
+[move_group-3] Warning: Invalid frame ID "link_3" passed to canTransform argument source_frame - frame does not exist
+[move_group-3]          at line 95 in ./src/buffer_core.cpp
+[spawner-7] [INFO] [1785727247.672398122] [spawner_joint_state_broadcaster]: [92mConfigured and activated [1mjoint_state_broadcaster[0m
+[scene_setup_node-8] [INFO] [1785727247.719206751] [scene_setup_node]: Waiting for /apply_planning_scene (provided by move_group)... obstacles=['scaffold_pole', 'tool_cart', 'cable_reel']
+[scene_setup_node-8] [INFO] [1785727247.727494509] [scene_setup_node]: Perception: first reading for 'scaffold_pole' at (1.250, 0.550, 1.050) -- refreshing planning scene.
+[scene_setup_node-8] [INFO] [1785727247.732648007] [scene_setup_node]: Perception: first reading for 'tool_cart' at (1.250, -0.550, 0.550) -- refreshing planning scene.
+[scene_setup_node-8] [INFO] [1785727247.736820715] [scene_setup_node]: Perception: first reading for 'cable_reel' at (1.300, 0.000, 0.300) -- refreshing planning scene.
+[scene_setup_node-8] [INFO] [1785727247.742283747] [scene_setup_node]: Perception: workspace_clear -> NOT clear (obstacle nearby).
+[rviz2-4] [ERROR] [1785727247.827539172] [rviz2]: The link link_4 is has unrealistic inertia, so the equivalent inertia box will not be shown.
+[rviz2-4] 
+[rviz2-4] [ERROR] [1785727247.847831689] [rviz2]: The link link_5 is has unrealistic inertia, so the equivalent inertia box will not be shown.
+[rviz2-4] 
+[rviz2-4] [ERROR] [1785727247.856049079] [rviz2]: The link link_6 is has unrealistic inertia, so the equivalent inertia box will not be shown.
+[rviz2-4] 
+[INFO] [spawner-7]: process has finished cleanly [pid 105954]
+[move_group-3] [ERROR] [1785727248.029249782] [moveit.ros.perception.shape_mask]: Missing transform for shape box with handle 15
+[move_group-3] [ERROR] [1785727248.029316021] [moveit.ros.perception.shape_mask]: Missing transform for shape box with handle 13
+[move_group-3] [ERROR] [1785727248.029323632] [moveit.ros.perception.shape_mask]: Missing transform for shape cylinder with handle 14
+[move_group-3] [ERROR] [1785727248.029331322] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 3
+[move_group-3] [ERROR] [1785727248.029337283] [moveit.ros.perception.shape_mask]: Missing transform for shape cylinder with handle 12
+[move_group-3] [ERROR] [1785727248.029342872] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 4
+[move_group-3] [ERROR] [1785727248.029350572] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727248.029395482] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 6
+[move_group-3] [ERROR] [1785727248.029419979] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 7
+[move_group-3] [ERROR] [1785727248.029426156] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 9
+[move_group-3] [ERROR] [1785727248.029431917] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 8
+[scene_setup_node-8] [INFO] [1785727248.031338215] [scene_setup_node]: Planning scene updated: target_structure + scaffold_pole, tool_cart, cable_reel.
+[scene_setup_node-8] [INFO] [1785727248.033947117] [scene_setup_node]: Planning scene updated: target_structure + scaffold_pole, tool_cart, cable_reel.
+[scene_setup_node-8] [INFO] [1785727248.034777225] [scene_setup_node]: Planning scene updated: target_structure + scaffold_pole, tool_cart, cable_reel.
+[scene_setup_node-8] [INFO] [1785727248.035351075] [scene_setup_node]: Planning scene updated: target_structure + scaffold_pole, tool_cart, cable_reel.
+[move_group-3] [ERROR] [1785727248.727159755] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727250.128006216] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727251.526888596] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727252.925751062] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727254.323567621] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727255.727161331] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727257.123603837] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727258.524033423] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727259.925657871] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727261.326236141] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727262.726179893] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727264.123926079] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727265.525468313] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727266.924009522] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [INFO] [1785727268.320193719] [moveit_move_group_default_capabilities.move_action_capability]: Received request
+[move_group-3] [INFO] [1785727268.320379898] [moveit_move_group_default_capabilities.move_action_capability]: executing..
+[move_group-3] [ERROR] [1785727268.327867387] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [INFO] [1785727268.328254275] [moveit_move_group_default_capabilities.move_action_capability]: Combined planning and execution request received for MoveGroup action. Forwarding to planning and execution pipeline.
+[move_group-3] [WARN] [1785727268.328280790] [moveit_move_group_capabilities_base.move_group_capability]: Execution of motions should always start at the robot's current state. Ignoring the state supplied as difference in the planning scene diff
+[move_group-3] [INFO] [1785727268.328293942] [moveit_ros.plan_execution]: Planning attempt 1 of at most 1
+[move_group-3] [INFO] [1785727268.330361715] [moveit.ompl_planning.model_based_planning_context]: Planner configuration 'manipulator' will use planner 'geometric::RRTConnect'. Additional configuration parameters will be set when the planner is constructed.
+[move_group-3] [INFO] [1785727268.344269775] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727268.344302299] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727268.344344365] [moveit_ros.trajectory_execution_manager]: Validating trajectory with allowed_start_tolerance 0.01
+[move_group-3] [INFO] [1785727268.351592689] [moveit_ros.trajectory_execution_manager]: Starting trajectory execution ...
+[move_group-3] [INFO] [1785727268.351669753] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727268.351686050] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727268.351844810] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: sending trajectory to irb2600_arm_controller
+[ros2_control_node-5] [INFO] [1785727268.352403799] [irb2600_arm_controller]: Received new action goal
+[ros2_control_node-5] [INFO] [1785727268.352459763] [irb2600_arm_controller]: Accepted new action goal
+[move_group-3] [INFO] [1785727268.353503068] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: irb2600_arm_controller started execution
+[move_group-3] [INFO] [1785727268.353528705] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Goal request accepted!
+[ros2_control_node-5] [INFO] [1785727268.460956564] [irb2600_arm_controller]: Goal reached, success!
+[move_group-3] [INFO] [1785727268.503300347] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Controller 'irb2600_arm_controller' successfully finished
+[move_group-3] [INFO] [1785727268.531571531] [moveit_ros.trajectory_execution_manager]: Completed trajectory execution with status SUCCEEDED ...
+[move_group-3] [INFO] [1785727268.531772533] [moveit_move_group_default_capabilities.move_action_capability]: Solution was found and executed.
+[move_group-3] [ERROR] [1785727269.325439299] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [INFO] [1785727270.371394189] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Received request to compute Cartesian path
+[move_group-3] [INFO] [1785727270.371520348] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Attempting to follow 2 waypoints for link 'nozzle_tip' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[move_group-3] [INFO] [1785727270.473758976] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Computed Cartesian path with 111 points (followed 43.307087% of requested trajectory)
+[move_group-3] [INFO] [1785727270.480897190] [moveit_move_group_default_capabilities.move_action_capability]: Received request
+[move_group-3] [INFO] [1785727270.480970220] [moveit_move_group_default_capabilities.move_action_capability]: executing..
+[move_group-3] [INFO] [1785727270.491416301] [moveit_move_group_default_capabilities.move_action_capability]: Planning request received for MoveGroup action. Forwarding to planning pipeline.
+[move_group-3] [ERROR] [1785727270.491527704] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727270.491568220] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727270.491612721] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727270.491719603] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [INFO] [1785727270.491929189] [moveit.ompl_planning.model_based_planning_context]: Planner configuration 'manipulator' will use planner 'geometric::RRTConnect'. Additional configuration parameters will be set when the planner is constructed.
+[move_group-3] [INFO] [1785727270.499454541] [moveit_move_group_default_capabilities.move_action_capability]: Motion plan was computed successfully.
+[spray_controller_node-10] [INFO] [1785727270.505417846] [spray_controller_node]: spray_on = true: coating in progress (eq. 7).
+[move_group-3] [INFO] [1785727270.508047263] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Received goal request
+[move_group-3] [INFO] [1785727270.508142071] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution request received
+[move_group-3] [INFO] [1785727270.508167002] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727270.508180997] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727270.508258229] [moveit_ros.trajectory_execution_manager]: Validating trajectory with allowed_start_tolerance 0.01
+[move_group-3] [INFO] [1785727270.511637792] [moveit_ros.trajectory_execution_manager]: Starting trajectory execution ...
+[move_group-3] [INFO] [1785727270.511703044] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727270.511721709] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727270.511826721] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: sending trajectory to irb2600_arm_controller
+[ros2_control_node-5] [INFO] [1785727270.512080299] [irb2600_arm_controller]: Received new action goal
+[ros2_control_node-5] [INFO] [1785727270.512120859] [irb2600_arm_controller]: Accepted new action goal
+[move_group-3] [INFO] [1785727270.512424499] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: irb2600_arm_controller started execution
+[move_group-3] [INFO] [1785727270.512441924] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Goal request accepted!
+[move_group-3] [ERROR] [1785727270.924977000] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[ros2_control_node-5] [INFO] [1785727271.571029420] [irb2600_arm_controller]: Goal reached, success!
+[move_group-3] [INFO] [1785727271.613755004] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Controller 'irb2600_arm_controller' successfully finished
+[move_group-3] [INFO] [1785727271.642270827] [moveit_ros.trajectory_execution_manager]: Completed trajectory execution with status SUCCEEDED ...
+[move_group-3] [INFO] [1785727271.643032771] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution completed: SUCCEEDED
+[spray_controller_node-10] [INFO] [1785727271.645013507] [spray_controller_node]: spray_on = false: coating trajectory cancelled/paused.
+[move_group-3] [ERROR] [1785727272.325630421] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727273.725997732] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [INFO] [1785727274.463531202] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Received request to compute Cartesian path
+[move_group-3] [INFO] [1785727274.463602398] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Attempting to follow 2 waypoints for link 'nozzle_tip' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[move_group-3] [INFO] [1785727274.534972123] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Computed Cartesian path with 131 points (followed 91.111111% of requested trajectory)
+[move_group-3] [INFO] [1785727275.550444632] [moveit_move_group_default_capabilities.move_action_capability]: Received request
+[move_group-3] [INFO] [1785727275.551927130] [moveit_move_group_default_capabilities.move_action_capability]: executing..
+[move_group-3] [INFO] [1785727275.564633599] [moveit_move_group_default_capabilities.move_action_capability]: Planning request received for MoveGroup action. Forwarding to planning pipeline.
+[move_group-3] [ERROR] [1785727275.564766788] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727275.564800353] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727275.564864257] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727275.564971894] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [INFO] [1785727275.565114906] [moveit.ompl_planning.model_based_planning_context]: Planner configuration 'manipulator' will use planner 'geometric::RRTConnect'. Additional configuration parameters will be set when the planner is constructed.
+[move_group-3] [INFO] [1785727275.573047698] [moveit_move_group_default_capabilities.move_action_capability]: Motion plan was computed successfully.
+[spray_controller_node-10] [INFO] [1785727275.576545358] [spray_controller_node]: spray_on = true: coating in progress (eq. 7).
+[move_group-3] [INFO] [1785727275.578162585] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Received goal request
+[move_group-3] [INFO] [1785727275.578278422] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution request received
+[move_group-3] [INFO] [1785727275.578304461] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727275.578316679] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727275.578349560] [moveit_ros.trajectory_execution_manager]: Validating trajectory with allowed_start_tolerance 0.01
+[move_group-3] [INFO] [1785727275.582395621] [moveit_ros.trajectory_execution_manager]: Starting trajectory execution ...
+[move_group-3] [INFO] [1785727275.582453814] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727275.582470885] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727275.582563132] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: sending trajectory to irb2600_arm_controller
+[ros2_control_node-5] [INFO] [1785727275.583533028] [irb2600_arm_controller]: Received new action goal
+[ros2_control_node-5] [INFO] [1785727275.583577765] [irb2600_arm_controller]: Accepted new action goal
+[move_group-3] [INFO] [1785727275.584340153] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: irb2600_arm_controller started execution
+[move_group-3] [INFO] [1785727275.584370447] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Goal request accepted!
+[ros2_control_node-5] [INFO] [1785727275.891020173] [irb2600_arm_controller]: Goal reached, success!
+[move_group-3] [INFO] [1785727275.934186807] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Controller 'irb2600_arm_controller' successfully finished
+[move_group-3] [INFO] [1785727275.962118101] [moveit_ros.trajectory_execution_manager]: Completed trajectory execution with status SUCCEEDED ...
+[move_group-3] [INFO] [1785727275.962528495] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution completed: SUCCEEDED
+[spray_controller_node-10] [INFO] [1785727275.965205097] [spray_controller_node]: spray_on = false: coating trajectory cancelled/paused.
+[move_group-3] [ERROR] [1785727276.524220752] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727277.923488358] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [INFO] [1785727278.780521354] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Received request to compute Cartesian path
+[move_group-3] [INFO] [1785727278.780611239] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Attempting to follow 2 waypoints for link 'nozzle_tip' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[move_group-3] [INFO] [1785727278.832148553] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Computed Cartesian path with 2 points (followed 2.631579% of requested trajectory)
+[move_group-3] [INFO] [1785727279.846694022] [moveit_move_group_default_capabilities.move_action_capability]: Received request
+[move_group-3] [INFO] [1785727279.846798666] [moveit_move_group_default_capabilities.move_action_capability]: executing..
+[move_group-3] [INFO] [1785727279.851920537] [moveit_move_group_default_capabilities.move_action_capability]: Planning request received for MoveGroup action. Forwarding to planning pipeline.
+[move_group-3] [ERROR] [1785727279.852042499] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727279.852070369] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727279.852270622] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727279.852559902] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [INFO] [1785727279.852687651] [moveit.ompl_planning.model_based_planning_context]: Planner configuration 'manipulator' will use planner 'geometric::RRTConnect'. Additional configuration parameters will be set when the planner is constructed.
+[move_group-3] [INFO] [1785727279.875513976] [moveit_move_group_default_capabilities.move_action_capability]: Motion plan was computed successfully.
+[spray_controller_node-10] [INFO] [1785727279.882121028] [spray_controller_node]: spray_on = true: coating in progress (eq. 7).
+[move_group-3] [INFO] [1785727279.884228000] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Received goal request
+[move_group-3] [INFO] [1785727279.884310117] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution request received
+[move_group-3] [INFO] [1785727279.884989968] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727279.885008653] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727279.885081556] [moveit_ros.trajectory_execution_manager]: Validating trajectory with allowed_start_tolerance 0.01
+[move_group-3] [INFO] [1785727279.891598027] [moveit_ros.trajectory_execution_manager]: Starting trajectory execution ...
+[move_group-3] [INFO] [1785727279.891713380] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727279.891736100] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727279.891898127] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: sending trajectory to irb2600_arm_controller
+[ros2_control_node-5] [INFO] [1785727279.892208894] [irb2600_arm_controller]: Received new action goal
+[ros2_control_node-5] [INFO] [1785727279.892427354] [irb2600_arm_controller]: Accepted new action goal
+[move_group-3] [INFO] [1785727279.893076422] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: irb2600_arm_controller started execution
+[move_group-3] [INFO] [1785727279.893091652] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Goal request accepted!
+[move_group-3] [ERROR] [1785727280.723993978] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[ros2_control_node-5] [INFO] [1785727281.831483659] [irb2600_arm_controller]: Goal reached, success!
+[move_group-3] [INFO] [1785727281.842849025] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Controller 'irb2600_arm_controller' successfully finished
+[move_group-3] [INFO] [1785727281.871477545] [moveit_ros.trajectory_execution_manager]: Completed trajectory execution with status SUCCEEDED ...
+[move_group-3] [INFO] [1785727281.872190143] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution completed: SUCCEEDED
+[spray_controller_node-10] [INFO] [1785727281.874790714] [spray_controller_node]: spray_on = false: coating trajectory cancelled/paused.
+[move_group-3] [ERROR] [1785727282.126833044] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727283.524620307] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [INFO] [1785727284.693242897] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Received request to compute Cartesian path
+[move_group-3] [INFO] [1785727284.693606198] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Attempting to follow 2 waypoints for link 'nozzle_tip' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[move_group-3] [INFO] [1785727284.747344468] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Computed Cartesian path with 20 points (followed 39.583333% of requested trajectory)
+[move_group-3] [INFO] [1785727284.756069281] [moveit_move_group_default_capabilities.move_action_capability]: Received request
+[move_group-3] [INFO] [1785727284.756167961] [moveit_move_group_default_capabilities.move_action_capability]: executing..
+[move_group-3] [INFO] [1785727284.762079782] [moveit_move_group_default_capabilities.move_action_capability]: Planning request received for MoveGroup action. Forwarding to planning pipeline.
+[move_group-3] [ERROR] [1785727284.762207986] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727284.762241303] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727284.762441491] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [ERROR] [1785727284.762587180] [moveit_robot_state.conversions]: Found empty JointState message
+[move_group-3] [INFO] [1785727284.762795420] [moveit.ompl_planning.model_based_planning_context]: Planner configuration 'manipulator' will use planner 'geometric::RRTConnect'. Additional configuration parameters will be set when the planner is constructed.
+[move_group-3] [INFO] [1785727284.779572264] [moveit_move_group_default_capabilities.move_action_capability]: Motion plan was computed successfully.
+[spray_controller_node-10] [INFO] [1785727284.783716785] [spray_controller_node]: spray_on = true: coating in progress (eq. 7).
+[move_group-3] [INFO] [1785727284.786093787] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Received goal request
+[move_group-3] [INFO] [1785727284.786182751] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution request received
+[move_group-3] [INFO] [1785727284.786205844] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727284.786216060] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727284.786242529] [moveit_ros.trajectory_execution_manager]: Validating trajectory with allowed_start_tolerance 0.01
+[move_group-3] [INFO] [1785727284.791488647] [moveit_ros.trajectory_execution_manager]: Starting trajectory execution ...
+[move_group-3] [INFO] [1785727284.791542642] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727284.791558277] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727284.791660176] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: sending trajectory to irb2600_arm_controller
+[ros2_control_node-5] [INFO] [1785727284.791860476] [irb2600_arm_controller]: Received new action goal
+[ros2_control_node-5] [INFO] [1785727284.791900681] [irb2600_arm_controller]: Accepted new action goal
+[move_group-3] [INFO] [1785727284.792952221] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: irb2600_arm_controller started execution
+[move_group-3] [INFO] [1785727284.792966884] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Goal request accepted!
+[move_group-3] [ERROR] [1785727284.925531940] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[ros2_control_node-5] [INFO] [1785727285.061055118] [irb2600_arm_controller]: Goal reached, success!
+[move_group-3] [INFO] [1785727285.092445737] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Controller 'irb2600_arm_controller' successfully finished
+[move_group-3] [INFO] [1785727285.121531142] [moveit_ros.trajectory_execution_manager]: Completed trajectory execution with status SUCCEEDED ...
+[move_group-3] [INFO] [1785727285.121679785] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution completed: SUCCEEDED
+[spray_controller_node-10] [INFO] [1785727285.124079585] [spray_controller_node]: spray_on = false: coating trajectory cancelled/paused.
+[move_group-3] [ERROR] [1785727286.326252958] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727287.734312812] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [INFO] [1785727287.941788771] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Received request to compute Cartesian path
+[move_group-3] [INFO] [1785727287.941865135] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Attempting to follow 2 waypoints for link 'nozzle_tip' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[move_group-3] [INFO] [1785727287.968267430] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Computed Cartesian path with 150 points (followed 100.000000% of requested trajectory)
+[spray_controller_node-10] [INFO] [1785727287.972322420] [spray_controller_node]: spray_on = true: coating in progress (eq. 7).
+[move_group-3] [INFO] [1785727287.973747385] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Received goal request
+[move_group-3] [INFO] [1785727287.973814222] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution request received
+[move_group-3] [INFO] [1785727287.973833779] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727287.973843403] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727287.973872271] [moveit_ros.trajectory_execution_manager]: Validating trajectory with allowed_start_tolerance 0.01
+[move_group-3] [INFO] [1785727287.982322339] [moveit_ros.trajectory_execution_manager]: Starting trajectory execution ...
+[move_group-3] [INFO] [1785727287.982377773] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727287.982393386] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727287.982492533] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: sending trajectory to irb2600_arm_controller
+[ros2_control_node-5] [INFO] [1785727287.982755530] [irb2600_arm_controller]: Received new action goal
+[ros2_control_node-5] [INFO] [1785727287.982792754] [irb2600_arm_controller]: Accepted new action goal
+[move_group-3] [INFO] [1785727287.983113995] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: irb2600_arm_controller started execution
+[move_group-3] [INFO] [1785727287.983128231] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Goal request accepted!
+[move_group-3] [ERROR] [1785727289.125407413] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[ros2_control_node-5] [INFO] [1785727290.271058646] [irb2600_arm_controller]: Goal reached, success!
+[move_group-3] [INFO] [1785727290.283923185] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Controller 'irb2600_arm_controller' successfully finished
+[move_group-3] [INFO] [1785727290.311573859] [moveit_ros.trajectory_execution_manager]: Completed trajectory execution with status SUCCEEDED ...
+[move_group-3] [INFO] [1785727290.312662564] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution completed: SUCCEEDED
+[spray_controller_node-10] [INFO] [1785727290.315881243] [spray_controller_node]: spray_on = false: coating trajectory cancelled/paused.
+[move_group-3] [ERROR] [1785727290.527814521] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727291.925312694] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [INFO] [1785727293.133616085] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Received request to compute Cartesian path
+[move_group-3] [INFO] [1785727293.133675520] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Attempting to follow 2 waypoints for link 'nozzle_tip' using a step of 0.010000 m and jump threshold 0.000000 (in global reference frame)
+[move_group-3] [INFO] [1785727293.148807376] [moveit_move_group_default_capabilities.cartersian_path_service_capability]: Computed Cartesian path with 103 points (followed 100.000000% of requested trajectory)
+[spray_controller_node-10] [INFO] [1785727293.151212567] [spray_controller_node]: spray_on = true: coating in progress (eq. 7).
+[move_group-3] [INFO] [1785727293.152552934] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Received goal request
+[move_group-3] [INFO] [1785727293.152642559] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution request received
+[move_group-3] [INFO] [1785727293.152668946] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727293.152683339] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727293.152723450] [moveit_ros.trajectory_execution_manager]: Validating trajectory with allowed_start_tolerance 0.01
+[move_group-3] [INFO] [1785727293.162546812] [moveit_ros.trajectory_execution_manager]: Starting trajectory execution ...
+[move_group-3] [INFO] [1785727293.162603083] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727293.162617398] [moveit.plugins.moveit_simple_controller_manager]: Returned 1 controllers in list
+[move_group-3] [INFO] [1785727293.162709871] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: sending trajectory to irb2600_arm_controller
+[ros2_control_node-5] [INFO] [1785727293.164543145] [irb2600_arm_controller]: Received new action goal
+[ros2_control_node-5] [INFO] [1785727293.164587890] [irb2600_arm_controller]: Accepted new action goal
+[move_group-3] [INFO] [1785727293.165385060] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: irb2600_arm_controller started execution
+[move_group-3] [INFO] [1785727293.165401195] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Goal request accepted!
+[move_group-3] [ERROR] [1785727293.325484366] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[ros2_control_node-5] [INFO] [1785727294.081091156] [irb2600_arm_controller]: Goal reached, success!
+[move_group-3] [INFO] [1785727294.115129406] [moveit.simple_controller_manager.follow_joint_trajectory_controller_handle]: Controller 'irb2600_arm_controller' successfully finished
+[move_group-3] [INFO] [1785727294.141876226] [moveit_ros.trajectory_execution_manager]: Completed trajectory execution with status SUCCEEDED ...
+[move_group-3] [INFO] [1785727294.142122125] [moveit_move_group_default_capabilities.execute_trajectory_action_capability]: Execution completed: SUCCEEDED
+[spray_controller_node-10] [INFO] [1785727294.144574786] [spray_controller_node]: spray_on = false: coating trajectory cancelled/paused.
+[move_group-3] [ERROR] [1785727294.723622556] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727296.125545048] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5
+[move_group-3] [ERROR] [1785727297.525327425] [moveit.ros.perception.shape_mask]: Missing transform for shape mesh with handle 5

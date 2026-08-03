@@ -55,6 +55,13 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         self._clear_stop()
         p = self.get_parameter
         
+        self.get_logger().info("Waiting for /structure_pose from perception_sim_node...")
+        # Wait up to 2 seconds for a message from perception_sim_node
+        elapsed = 0.0
+        while self._latest_target_pose is None and rclpy.ok() and not self._stop_requested() and elapsed < 2.0:
+            rclpy.spin_once(self, timeout_sec=0.1)
+            elapsed += 0.1
+
         if self._latest_target_pose:
             frame_id = self._latest_target_pose.header.frame_id
             pos = [
@@ -67,6 +74,7 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
             # Rotate normal if the target structure was rotated
             normal = rotate_vector_by_quaternion(normal, target_quat)
         else:
+            self.get_logger().warn("Did not receive /structure_pose, falling back to static parameters.")
             frame_id = p("target_structure.frame_id").value
             pos = p("target_structure.position").value
             normal = p("target_structure.local_normal").value

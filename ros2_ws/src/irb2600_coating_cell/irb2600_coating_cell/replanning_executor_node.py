@@ -312,6 +312,10 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
             self.get_logger().error("execute_trajectory action server not available.")
             return False
 
+        # Ensure header stamp is updated to current time for ExecuteTrajectory
+        now = self.get_clock().now().to_msg()
+        trajectory.joint_trajectory.header.stamp = now
+
         goal = ExecuteTrajectory.Goal()
         goal.trajectory = trajectory
         send_future = self._execute_client.send_goal_async(goal)

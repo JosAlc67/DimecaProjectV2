@@ -36,7 +36,7 @@ import rclpy
 from rclpy.parameter import Parameter
 
 from irb2600_coating_cell.go_home_node import GoHomeNode
-from irb2600_coating_cell.replanning_executor_node import ReplanningExecutorNode
+from irb2600_coating_cell.replanning_executor_node import PickAndPlaceExecutorNode
 
 
 class ControlPanelApp:
@@ -139,7 +139,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     go_home_node = GoHomeNode()
-    replanning_node = ReplanningExecutorNode(
+    replanning_node = PickAndPlaceExecutorNode(
         parameter_overrides=[Parameter("execute", Parameter.Type.BOOL, True)]
     )
 

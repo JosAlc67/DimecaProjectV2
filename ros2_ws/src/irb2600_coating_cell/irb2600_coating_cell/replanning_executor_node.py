@@ -34,7 +34,7 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         self.declare_parameter("target_structure.frame_id", "world")
         self.declare_parameter("target_structure.position", [1.8, 0.0, 1.0])
         self.declare_parameter("target_structure.local_normal", [-1.0, 0.0, 0.0])
-        self.declare_parameter("d_standoff", 0.20)
+        self.declare_parameter("d_standoff", 0.02)
         
         self.declare_parameter("group_name", "manipulator")
         self.declare_parameter("tcp_link", "nozzle_tip")

@@ -68,19 +68,40 @@ class GoHomeNode(StoppableActionNode, Node):
         goal.planning_options.planning_scene_diff.is_diff = True
 
         self.get_logger().info("Planning path to home (all joints = 0)...")
-        result_response = self._send_goal_and_wait(self._client, goal)
+        
+        max_attempts = 5
+        attempts = 0
+        while rclpy.ok() and not self._stop_requested() and attempts < max_attempts:
+            attempts += 1
+            if attempts > 1:
+                self.get_logger().info(f"--- Attempt {attempts}/{max_attempts} to go home ---")
+                
+            result_response = self._send_goal_and_wait(self._client, goal)
 
-        if result_response is None:
-            self.get_logger().error("move_action goal rejected.")
-        elif self._succeeded(result_response):
-            self.get_logger().info("Home reached.")
-        elif self._cancelled(result_response):
-            self.get_logger().warn("Go Home cancelled (Stop).")
-        else:
-            self.get_logger().error(
-                f"Failed to reach home (status={result_response.status}, "
-                f"error_code={result_response.result.error_code.val})."
-            )
+            if result_response is None:
+                self.get_logger().error("move_action goal rejected.")
+                break
+            elif self._succeeded(result_response):
+                self.get_logger().info("Home reached.")
+                return
+            elif self._cancelled(result_response):
+                self.get_logger().warn("Go Home cancelled (Stop).")
+                return
+            else:
+                error_code = result_response.result.error_code.val
+                if error_code in [-26, -27]:
+                    # START_STATE_INVALID or GOAL_STATE_INVALID
+                    self.get_logger().error(
+                        f"Failed to reach home (error_code={error_code}). "
+                        "Make sure obstacles are not colliding with the robot's current or home position!"
+                    )
+                    break
+                else:
+                    self.get_logger().warn(
+                        f"Failed to plan/execute path to home (error_code={error_code}). Retrying..."
+                    )
+                    
+        self.get_logger().error("Could not reach home after multiple attempts.")
 
 
 def main(args=None):

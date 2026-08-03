@@ -120,7 +120,7 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
         elapsed = 0.0
         while elapsed < duration_s and not self._stop_requested():
             step = min(_STOP_POLL_S, duration_s - elapsed)
-            time.sleep(step)
+            rclpy.spin_once(self, timeout_sec=step)
             elapsed += step
 
     def _process_row(self, row, idx, metrics):
@@ -329,7 +329,7 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
                 goal_handle.cancel_goal_async()
                 rclpy.spin_until_future_complete(self, res_future)
                 return False
-            time.sleep(_STOP_POLL_S)
+            rclpy.spin_until_future_complete(self, res_future, timeout_sec=_STOP_POLL_S)
 
         result = res_future.result()
         if result.result.error_code.val != MoveItErrorCodes.SUCCESS:

@@ -8,6 +8,7 @@ taking effect before the *next* motion starts.
 import threading
 
 import rclpy
+from std_msgs.msg import String
 from action_msgs.msg import GoalStatus
 
 
@@ -19,6 +20,7 @@ class StoppableActionNode:
     def _init_stoppable(self):
         self._stop_event = threading.Event()
         self._active_goal_handle = None
+        self._stop_publisher = self.create_publisher(String, '/trajectory_execution_event', 10)
 
     def request_stop(self):
         """Thread-safe: ask any in-progress action goal to cancel and any
@@ -56,8 +58,11 @@ class StoppableActionNode:
                     return result_future.result()
                 if self._stop_requested():
                     if not cancel_sent:
-                        self.get_logger().warn("Stop requested: cancelling in-progress goal...")
+                        self.get_logger().warn("Stop requested: cancelling in-progress goal and interrupting trajectory execution...")
                         goal_handle.cancel_goal_async()
+                        msg = String()
+                        msg.data = "stop"
+                        self._stop_publisher.publish(msg)
                         cancel_sent = True
                     # cancel already sent; keep polling
                     # the same future so we still pick up the resulting

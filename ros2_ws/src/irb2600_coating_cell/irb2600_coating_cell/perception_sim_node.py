@@ -135,7 +135,11 @@ class PerceptionSimNode(Node):
 
             # Sample surface 3D points for this obstacle to feed Octomap
             obs_quat = quaternion_from_rpy(*obstacle_rpy)
-            obs_pts = self._sample_obstacle_surface_points(obstacle_pos, obs_quat, obstacle_size)
+            obstacle_type = self.get_parameter(f"{name}.type").value
+            if obstacle_type == "cylinder":
+                obs_pts = self._sample_cylinder_surface_points(obstacle_pos, obs_quat, obstacle_size)
+            else:
+                obs_pts = self._sample_box_surface_points(obstacle_pos, obs_quat, obstacle_size)
             all_points.extend(obs_pts)
 
             if not self._is_obstacle_clear(name, obstacle_pos, structure_pos):
@@ -151,13 +155,12 @@ class PerceptionSimNode(Node):
             pc2_msg = create_point_cloud_2(header, all_points)
             self._pointcloud_pub.publish(pc2_msg)
 
-    def _sample_obstacle_surface_points(self, pos, quat, size):
-        """Generates a grid of 3D surface points in world frame representing the obstacle volume."""
+    def _sample_box_surface_points(self, pos, quat, size):
+        """Generates a grid of 3D surface points in world frame representing the box volume."""
         points = []
         dx, dy, dz = size[0] / 2.0, size[1] / 2.0, size[2] / 2.0
         step = 0.05  # 5 cm point spacing
 
-        # Grid points along bounding surfaces
         nx_steps = max(int(size[0] / step), 2)
         ny_steps = max(int(size[1] / step), 2)
         nz_steps = max(int(size[2] / step), 2)
@@ -168,10 +171,44 @@ class PerceptionSimNode(Node):
                 y = -dy + iy * (size[1] / max(ny_steps - 1, 1))
                 for iz in range(nz_steps):
                     z = -dz + iz * (size[2] / max(nz_steps - 1, 1))
-                    # Only keep surface voxels
                     if ix in (0, nx_steps - 1) or iy in (0, ny_steps - 1) or iz in (0, nz_steps - 1):
                         rot_x, rot_y, rot_z = rotate_vector_by_quaternion((x, y, z), quat)
                         points.append((pos[0] + rot_x, pos[1] + rot_y, pos[2] + rot_z))
+        return points
+
+    def _sample_cylinder_surface_points(self, pos, quat, size):
+        """Generates a grid of 3D surface points in world frame representing the cylinder volume.
+        size = [height, radius, _unused]"""
+        points = []
+        height, radius = size[0], size[1]
+        step = 0.05
+        
+        nz_steps = max(int(height / step), 2)
+        ntheta_steps = max(int((2 * math.pi * radius) / step), 8)
+        
+        for iz in range(nz_steps):
+            z = -height/2.0 + iz * (height / max(nz_steps - 1, 1))
+            for itheta in range(ntheta_steps):
+                theta = itheta * (2 * math.pi / ntheta_steps)
+                x = radius * math.cos(theta)
+                y = radius * math.sin(theta)
+                rot_x, rot_y, rot_z = rotate_vector_by_quaternion((x, y, z), quat)
+                points.append((pos[0] + rot_x, pos[1] + rot_y, pos[2] + rot_z))
+                
+        # Top and bottom caps
+        nrad_steps = max(int(radius / step), 2)
+        for iz in [0, nz_steps - 1]:
+            z = -height/2.0 + iz * (height / max(nz_steps - 1, 1))
+            for ir in range(1, nrad_steps):
+                r = ir * (radius / max(nrad_steps - 1, 1))
+                circ_steps = max(int((2 * math.pi * r) / step), 4)
+                for itheta in range(circ_steps):
+                    theta = itheta * (2 * math.pi / circ_steps)
+                    x = r * math.cos(theta)
+                    y = r * math.sin(theta)
+                    rot_x, rot_y, rot_z = rotate_vector_by_quaternion((x, y, z), quat)
+                    points.append((pos[0] + rot_x, pos[1] + rot_y, pos[2] + rot_z))
+                    
         return points
 
     def _is_obstacle_clear(self, name, obstacle_pos, structure_pos):

@@ -39,7 +39,7 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         self.declare_parameter("group_name", "manipulator")
         self.declare_parameter("tcp_link", "nozzle_tip")
         self.declare_parameter("execute", False)
-        self.declare_parameter("replanning_time_s", 10.0)
+        self.declare_parameter("replanning_time_s", 3.0)
         self.declare_parameter("replanning_attempts", 10)
 
         self._latest_target_pose = None

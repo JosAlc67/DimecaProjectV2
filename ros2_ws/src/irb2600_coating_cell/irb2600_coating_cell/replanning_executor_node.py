@@ -43,7 +43,8 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         self.declare_parameter("replanning_attempts", 10)
 
         self._latest_target_pose = None
-        # Subscriber is now created dynamically in run_to_target to avoid queueing stale messages
+        qos = QoSProfile(depth=10, history=HistoryPolicy.KEEP_LAST)
+        self.create_subscription(PoseStamped, "structure_pose", self._on_structure_pose, qos)
 
 
         self._move_group_client = ActionClient(self, MoveGroup, "move_action")
@@ -59,17 +60,16 @@ class PickAndPlaceExecutorNode(StoppableActionNode, Node):
         
         self.get_logger().info("Waiting for fresh /structure_pose from perception_sim_node...")
         
-        # Create a temporary subscriber to get the absolute latest pose without old queued messages
+        # Drain any old messages sitting in the subscriber queue (up to depth=10)
+        for _ in range(20):
+            rclpy.spin_once(self, timeout_sec=0.0)
+            
+        # Clear the variable and wait for the absolute latest broadcast
         self._latest_target_pose = None
-        qos = QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT, history=HistoryPolicy.KEEP_LAST)
-        sub = self.create_subscription(PoseStamped, "structure_pose", self._on_structure_pose, qos)
-        
         elapsed = 0.0
         while self._latest_target_pose is None and rclpy.ok() and not self._stop_requested() and elapsed < 2.0:
             rclpy.spin_once(self, timeout_sec=0.1)
             elapsed += 0.1
-            
-        self.destroy_subscription(sub)
 
         if self._latest_target_pose:
             frame_id = self._latest_target_pose.header.frame_id

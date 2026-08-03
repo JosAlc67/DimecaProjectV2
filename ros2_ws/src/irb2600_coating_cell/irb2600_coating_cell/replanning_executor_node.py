@@ -342,7 +342,7 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
 
     def _set_spray_sync(self, enable: bool):
         if not self._spray_client.service_is_ready():
-            self.get_logger().warn_once(
+            self.get_logger().warn(
                 "spray_controller_node not available; continuing without toggling spray_on."
             )
             return

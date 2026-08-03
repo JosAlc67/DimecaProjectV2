@@ -182,7 +182,17 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
     _REPLAN_MARGINS = [0.05, 0.10, 0.20, 0.35]
 
     def _replan_row(self, row, idx, seed, fraction):
-        # 1. Attempt backing off from partial Cartesian path
+        # 1. Attempt 3D joint-space bypass to jump PAST the obstacle (ideally to the end of the row)
+        for target_t in [1.0, 0.75, 0.5]:
+            if target_t > fraction:
+                self.get_logger().info(
+                    f"Row {idx + 1}: attempting 3D joint-space bypass to t={target_t:.3f}."
+                )
+                trajectory = self._attempt_replan_at(row, idx, seed, target_t)
+                if trajectory is not None:
+                    return trajectory
+
+        # 2. If completely blocked from going forward, attempt backing off from partial Cartesian path
         for margin in self._REPLAN_MARGINS:
             target_t = fraction - margin
             if target_t > 0.0:
@@ -192,15 +202,6 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
                 trajectory = self._attempt_replan_at(row, idx, seed, target_t)
                 if trajectory is not None:
                     return trajectory
-
-        # 2. If obstacle is near the start of the row, attempt 3D joint-space bypass
-        for target_t in [1.0, 0.75, 0.5]:
-            self.get_logger().info(
-                f"Row {idx + 1}: obstacle near start (fraction={fraction:.3f}), trying 3D joint-space bypass to t={target_t:.3f}."
-            )
-            trajectory = self._attempt_replan_at(row, idx, seed, target_t)
-            if trajectory is not None:
-                return trajectory
 
         self.get_logger().error(
             f"Row {idx + 1}: no safe replanning trajectory found (fraction={fraction:.3f})."

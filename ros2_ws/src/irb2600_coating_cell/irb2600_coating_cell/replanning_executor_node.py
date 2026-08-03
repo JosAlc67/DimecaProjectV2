@@ -141,32 +141,33 @@ class ReplanningExecutorNode(StoppableActionNode, Node):
             f"{t_plan:.3f} s). Replanning around it..."
         )
         
-        safe_t = fraction - 0.05
-        if safe_t > 0.05:
-            start_pose, end_pose = row[0], row[-1]
-            safe_pose = Pose()
-            safe_pose.position.x = start_pose.position.x + safe_t * (end_pose.position.x - start_pose.position.x)
-            safe_pose.position.y = start_pose.position.y + safe_t * (end_pose.position.y - start_pose.position.y)
-            safe_pose.position.z = start_pose.position.z + safe_t * (end_pose.position.z - start_pose.position.z)
-            safe_pose.orientation = end_pose.orientation
-            
-            safe_fraction, safe_traj = self._compute_cartesian_segment([start_pose, safe_pose])
-            if safe_fraction >= 0.99:
-                self.get_logger().info(f"Row {idx + 1}: executing safe Cartesian path up to t={safe_t:.3f} (spray ON)")
-                if not self._execute_with_spray(safe_traj):
-                    metrics["failed"] += 1
-                    return False
+        # 1. Safely execute the partial Cartesian path by truncating the points 
+        # that are dangerously close to the collision boundary.
+        points = trajectory.joint_trajectory.points
+        # Drop the last ~5-10% of points, or at least 3 points, to leave a safe margin.
+        drop_count = max(3, int(len(points) * 0.1))
+        
+        if len(points) > drop_count:
+            trajectory.joint_trajectory.points = points[:-drop_count]
+            self.get_logger().info(f"Row {idx + 1}: executing safe partial Cartesian path ({len(trajectory.joint_trajectory.points)} points, spray ON).")
+            if not self._execute_with_spray(trajectory):
+                metrics["failed"] += 1
+                return False
+        else:
+            self.get_logger().warn(f"Row {idx + 1}: blocked too early to execute partial path.")
 
-        self.get_logger().info(f"Row {idx + 1}: executing joint-space bypass to the end of the row (spray OFF).")
+        # 2. Try to bypass to the end of the row
+        self.get_logger().info(f"Row {idx + 1}: attempting joint-space bypass to the end of the row (spray OFF).")
         t0_replan = time.time()
         bypass_trajectory = self._attempt_replan_at(row, idx, None, 1.0)
         t_replan = time.time() - t0_replan
         metrics["total_replan_time_s"] += t_replan
 
         if bypass_trajectory is None:
-            self.get_logger().error(f"Row {idx + 1}: failed to find bypass.")
-            metrics["failed"] += 1
-            return False
+            self.get_logger().warn(f"Row {idx + 1}: failed to find bypass to the end of the row (target might be inside obstacle). Skipping rest of row.")
+            # We still return True because we handled the obstacle safely (by stopping)
+            # and we want to continue to the next row, not abort the whole mission.
+            return True
 
         self.get_logger().info(
             f"Row {idx + 1}: bypass planned successfully (t_replan={t_replan:.3f} s)."

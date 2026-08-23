@@ -68,27 +68,22 @@
   <joint name="track_prismatic_joint" type="prismatic">
     <parent link="track_link"/>
     <child link="platform_link"/>
-    <!-- The STL's Z-axis corresponds to the length of the track -->
+    <!-- Center the carriage on the track rails -->
+    <origin xyz="-0.0725 0.25 0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <!-- The physical track limits. Since we rotated it, +Z moves along world -Y -->
     <limit lower="0.0" upper="4.5" effort="1000.0" velocity="1.0"/>
-    <!-- The origin of the platform relative to the track's slider center -->
-    <origin xyz="0 0.25 0" rpy="0 0 0"/>
   </joint>
 
-  <!-- Mount the robot's base_mesh to the platform -->
-  <!-- In robot_base.xacro, base_mesh attaches to 'world'. We will change that file later so it attaches to 'platform_link'. -->
-  <!-- Or we can just not include robot_base.xacro and do it here? robot_base.xacro has base_mesh_joint. -->
-
-  <!-- Hardcoded Target Panel for guaranteed visibility in RViz without DDS issues -->
+  <!-- Load target panel mesh -->
   <link name="target_panel">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh filename="package://irb2600_coating_cell/meshes/curved_panel.stl"/>
       </geometry>
-      <material name="panel_white">
-        <color rgba="1.0 1.0 1.0 1.0"/>
+      <material name="panel_grey">
+        <color rgba="0.8 0.8 0.8 1.0"/>
       </material>
     </visual>
     <collision>
@@ -103,7 +98,7 @@
   <joint name="world_to_target_panel" type="fixed">
     <parent link="world"/>
     <child link="target_panel"/>
-    <origin xyz="0.6 -0.55 1.0" rpy="0 0 0"/>
+    <origin xyz="0.6 -1.2 1.0" rpy="0 0 0"/>
   </joint>
 
   <!-- Load robot -->

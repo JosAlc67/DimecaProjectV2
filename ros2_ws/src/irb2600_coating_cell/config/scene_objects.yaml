@@ -17,6 +17,7 @@
       orientation_rpy: [0.0, 0.0, 0.0]
       size: [0.05, 5.0, 2.0]
       local_normal: [-1.0, 0.0, 0.0]
+      mesh_file: "package://irb2600_coating_cell/meshes/wavy_panel.stl"
 
     obstacles: []
 

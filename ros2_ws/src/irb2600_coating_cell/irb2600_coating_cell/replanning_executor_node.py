@@ -60,47 +60,90 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
     def _on_structure_pose(self, msg):
         self._latest_target_pose = msg
 
-    def _generate_raster_path(self, center_pos, size, normal, standoff):
-        """Generates a list of Poses covering the YZ face of the panel."""
+    def _generate_mesh_coverage_path(self, mesh_file, center_pos, standoff):
+        """Generates a list of Poses by raycasting against the 3D mesh surface."""
+        import trimesh
+        import numpy as np
+        import os
+        from ament_index_python.packages import get_package_share_directory
+        
+        # Resolve path
+        if mesh_file.startswith("package://"):
+            pkg_name = mesh_file.split("/")[2]
+            rel_path = "/".join(mesh_file.split("/")[3:])
+            try:
+                share_dir = get_package_share_directory(pkg_name)
+                mesh_path = os.path.join(share_dir, rel_path)
+            except Exception:
+                mesh_path = ""
+            
+            # If not in install, fallback to src for development
+            if not os.path.exists(mesh_path):
+                mesh_path = f"/home/josuealcivar/DimecaProjectV2/ros2_ws/src/{pkg_name}/{rel_path}"
+        else:
+            mesh_path = mesh_file
+            
+        self.get_logger().info(f"Loading mesh for 3D CPP from {mesh_path}")
+        mesh = trimesh.load(mesh_path)
+        
+        # Apply the exact same transformations as the URDF visual
+        rot_matrix = trimesh.transformations.rotation_matrix(math.pi/2, [1, 0, 0])
+        mesh.apply_transform(rot_matrix)
+        mesh.apply_translation(center_pos)
+        
         p = self.get_parameter
         step_z = p("raster_step_z").value
         step_y = p("raster_step_y").value
         
-        # Dimensions
-        y_size = size[1]
-        z_size = size[2]
-        
-        # We start from top-left
-        start_y = center_pos[1] - y_size/2.0 + 0.1
-        end_y = center_pos[1] + y_size/2.0 - 0.1
-        start_z = center_pos[2] + z_size/2.0 - 0.1
-        end_z = center_pos[2] - z_size/2.0 + 0.1
-        
-        # Fixed X based on normal
-        paint_x = center_pos[0] + normal[0] * standoff
+        bounds = mesh.bounds
+        z_min = bounds[0][2] + 0.1
+        z_max = bounds[1][2] - 0.1
+        y_min = bounds[0][1] + 0.1
+        y_max = bounds[1][1] - 0.1
         
         path = []
-        current_z = start_z
-        direction = 1 # 1 for moving +Y, -1 for moving -Y
+        current_z = z_max
+        direction = 1
         
-        # The tool orientation is opposite to the surface normal
-        approach_direction = tuple(-c for c in normal)
-        orientation = quaternion_with_z_axis(approach_direction)
-        
-        while current_z >= end_z:
-            if direction == 1:
-                y_points = self._frange(start_y, end_y, step_y)
-            else:
-                y_points = self._frange(end_y, start_y, -step_y)
-                
+        while current_z >= z_min:
+            y_points = self._frange(y_min, y_max, step_y) if direction == 1 else self._frange(y_max, y_min, -step_y)
+            
             for current_y in y_points:
-                pose = Pose()
-                pose.position.x = paint_x
-                pose.position.y = current_y
-                pose.position.z = current_z
-                pose.orientation = orientation
-                path.append(pose)
+                # Shoot a ray from +X towards the mesh to find the surface
+                origin = np.array([[center_pos[0] + 1.0, current_y, current_z]])
+                direction_vec = np.array([[-1.0, 0.0, 0.0]])
                 
+                locs, idx_ray, idx_tri = mesh.ray.intersects_location(
+                    ray_origins=origin,
+                    ray_directions=direction_vec,
+                    multiple_hits=False
+                )
+                
+                if len(locs) > 0:
+                    hit_point = locs[0]
+                    tri_idx = idx_tri[0]
+                    
+                    # Get exact 3D surface normal
+                    normal = mesh.face_normals[tri_idx]
+                    # Ensure normal points outwards (towards +X)
+                    if normal[0] < 0:
+                        normal = -normal
+                        
+                    # Calculate tool position with standoff along the normal
+                    tool_x = hit_point[0] + normal[0] * standoff
+                    tool_y = hit_point[1] + normal[1] * standoff
+                    tool_z = hit_point[2] + normal[2] * standoff
+                    
+                    pose = Pose()
+                    pose.position.x = float(tool_x)
+                    pose.position.y = float(tool_y)
+                    pose.position.z = float(tool_z)
+                    
+                    # Tool approaches AGAINST the normal
+                    approach = [-float(normal[0]), -float(normal[1]), -float(normal[2])]
+                    pose.orientation = quaternion_with_z_axis(approach)
+                    path.append(pose)
+                    
             current_z -= step_z
             direction *= -1
             
@@ -126,13 +169,12 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         # Get target from parameters
         frame_id = p("target_structure.frame_id").value
         pos = p("target_structure.position").value
-        size = p("target_structure.size").value
-        normal = p("target_structure.local_normal").value
+        mesh_file = p("target_structure.mesh_file").value
         d_standoff = p("d_standoff").value
         
-        self.get_logger().info(f"Generating Coverage Path for Panel size {size} at {pos}")
-        waypoints = self._generate_raster_path(pos, size, normal, d_standoff)
-        self.get_logger().info(f"Generated {len(waypoints)} painting waypoints.")
+        self.get_logger().info(f"Generating 3D Coverage Path for mesh at {pos}")
+        waypoints = self._generate_mesh_coverage_path(mesh_file, pos, d_standoff)
+        self.get_logger().info(f"Generated {len(waypoints)} dynamic 3D painting waypoints.")
         
         for idx, target_pose in enumerate(waypoints):
             if not rclpy.ok() or self._stop_requested():

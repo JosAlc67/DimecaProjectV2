@@ -125,6 +125,7 @@ class PerceptionSimNode(Node):
         from visualization_msgs.msg import Marker
         marker = Marker()
         marker.type = Marker.CUBE
+        marker.pose.orientation.w = 1.0
         marker.scale.x = 0.5
         marker.scale.y = 0.5
         marker.scale.z = 0.5

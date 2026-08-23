@@ -101,7 +101,7 @@
   <joint name="world_to_panel" type="fixed">
     <parent link="world"/>
     <child link="target_panel"/>
-    <origin xyz="1.5 -4.5 1.5" rpy="0 0 0"/>
+    <origin xyz="2.0 2.0 1.5" rpy="0 0 0"/>
   </joint>
 
   <!-- Load robot -->

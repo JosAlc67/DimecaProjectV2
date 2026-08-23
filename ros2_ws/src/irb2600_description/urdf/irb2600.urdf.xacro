@@ -68,8 +68,8 @@
   <joint name="track_prismatic_joint" type="prismatic">
     <parent link="track_link"/>
     <child link="platform_link"/>
-    <!-- Center the carriage on the track rails -->
-    <origin xyz="-0.0725 0.25 0" rpy="0 0 0"/>
+    <!-- Align sliding blocks (X=-0.064) and seat grooves on rails (Y=0.100) -->
+    <origin xyz="-0.064 0.10 0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <!-- The physical track limits. Since we rotated it, +Z moves along world -Y -->
     <limit lower="0.0" upper="4.5" effort="1000.0" velocity="1.0"/>

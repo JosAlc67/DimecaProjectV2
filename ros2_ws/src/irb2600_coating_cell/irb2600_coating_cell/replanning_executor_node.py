@@ -91,10 +91,10 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         step_y = p("raster_step_y").value
         
         bounds = mesh.bounds
-        z_min = bounds[0][2] + 0.1
-        z_max = bounds[1][2] - 0.1
-        y_min = bounds[0][1] + 0.1
-        y_max = bounds[1][1] - 0.1
+        z_min = bounds[0][2] + 0.35
+        z_max = bounds[1][2] - 0.35
+        y_min = bounds[0][1] + 0.2
+        y_max = bounds[1][1] - 0.2
         
         path = []
         current_z = z_max
@@ -273,9 +273,9 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         oc.header.frame_id = frame_id
         oc.link_name = self.get_parameter("tcp_link").value
         oc.orientation = target_pose.orientation
-        oc.absolute_x_axis_tolerance = 0.1
-        oc.absolute_y_axis_tolerance = 0.1
-        oc.absolute_z_axis_tolerance = 0.1
+        oc.absolute_x_axis_tolerance = 0.5
+        oc.absolute_y_axis_tolerance = 0.5
+        oc.absolute_z_axis_tolerance = 0.5
         oc.weight = 1.0
         
         constraint.position_constraints.append(pc)

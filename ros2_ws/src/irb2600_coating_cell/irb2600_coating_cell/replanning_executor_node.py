@@ -52,6 +52,9 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         self._move_group_client = ActionClient(self, MoveGroup, "move_action")
         self.get_logger().info("Waiting for /move_action (move_group)...")
         self._move_group_client.wait_for_server()
+        
+        from std_srvs.srv import SetBool
+        self._spray_client = self.create_client(SetBool, "/spray_controller_node/set_spray_on")
 
     def _on_structure_pose(self, msg):
         self._latest_target_pose = msg
@@ -146,6 +149,9 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
             
             while rclpy.ok() and not self._stop_requested() and attempts < max_attempts:
                 attempts += 1
+                # Stop spraying before replanning/moving to a new discontinuous point
+                self._set_spray(False)
+                
                 goal = self._build_move_goal(target_pose, frame_id)
                 result = self._send_goal_and_wait(self._move_group_client, goal)
                 
@@ -156,6 +162,11 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                 error_code = result.result.error_code.val
                 if error_code == SUCCESS:
                     waypoint_reached = True
+                    # If we successfully moved, turn on spray for the NEXT continuous motion
+                    # (In a real system, you'd trigger this via a trajectory controller,
+                    # but for this simulation, triggering it after reaching a point starts
+                    # the trail for the subsequent movement).
+                    self._set_spray(True)
                     break
                 elif error_code in [PREEMPTED, CONTROL_FAILED]:
                     self.get_logger().warn(f"Dynamic obstacle encountered! Replanning (attempt {attempts})...")
@@ -170,8 +181,16 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
             if not waypoint_reached:
                 self.get_logger().warn(f"Skipping waypoint {idx+1} after failures.")
 
+        self._set_spray(False)
         self.get_logger().info("Coverage Path Execution Completed.")
         return True
+
+    def _set_spray(self, state):
+        if not self._spray_client.wait_for_service(timeout_sec=1.0):
+            return
+        req = SetBool.Request()
+        req.data = state
+        self._spray_client.call_async(req)
 
     def _build_move_goal(self, target_pose, frame_id):
         goal = MoveGroup.Goal()

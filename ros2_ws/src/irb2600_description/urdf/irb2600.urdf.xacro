@@ -86,8 +86,8 @@
       <geometry>
         <box size="0.05 5.0 2.0"/>
       </geometry>
-      <material name="panel_blue">
-        <color rgba="0.2 0.5 1.0 1.0"/>
+      <material name="panel_white">
+        <color rgba="1.0 1.0 1.0 1.0"/>
       </material>
     </visual>
     <collision>

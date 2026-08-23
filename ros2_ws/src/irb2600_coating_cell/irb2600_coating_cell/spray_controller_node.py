@@ -18,6 +18,9 @@ from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
 from std_msgs.msg import Bool
 from std_srvs.srv import SetBool
+from visualization_msgs.msg import Marker
+from geometry_msgs.msg import Point
+import tf2_ros
 
 
 class SprayControllerNode(Node):
@@ -32,8 +35,54 @@ class SprayControllerNode(Node):
         self._publisher = self.create_publisher(Bool, "spray_on", transient_local_qos)
         self.create_service(SetBool, "~/set_spray_on", self._on_set_spray_on)
 
+        # Paint visualization
+        self._tf_buffer = tf2_ros.Buffer()
+        self._tf_listener = tf2_ros.TransformListener(self._tf_buffer, self)
+        self._paint_pub = self.create_publisher(Marker, "~/paint_splatters", 10)
+        self._paint_marker = Marker()
+        self._paint_marker.header.frame_id = "world"
+        self._paint_marker.type = Marker.SPHERE_LIST
+        self._paint_marker.action = Marker.ADD
+        self._paint_marker.scale.x = 0.08  # 8cm paint spray
+        self._paint_marker.scale.y = 0.08
+        self._paint_marker.scale.z = 0.08
+        self._paint_marker.color.r = 0.0
+        self._paint_marker.color.g = 0.5
+        self._paint_marker.color.b = 1.0
+        self._paint_marker.color.a = 0.8
+        self._paint_marker.pose.orientation.w = 1.0
+
+        # Run timer at 10Hz to sample paint
+        self.create_timer(0.1, self._paint_tick)
+
         self._publish_state()
         self.get_logger().info("spray_controller_node ready, spray_on = false")
+
+    def _paint_tick(self):
+        if not self._spray_on:
+            return
+
+        try:
+            # Lookup where the nozzle tip is right now
+            trans = self._tf_buffer.lookup_transform(
+                "world",
+                "nozzle_tip",
+                rclpy.time.Time()
+            )
+            
+            p = Point()
+            # Paint slightly in front of the nozzle tip so it hits the panel
+            p.x = trans.transform.translation.x + 0.15
+            p.y = trans.transform.translation.y
+            p.z = trans.transform.translation.z
+            
+            self._paint_marker.points.append(p)
+            self._paint_marker.header.stamp = self.get_clock().now().to_msg()
+            self._paint_pub.publish(self._paint_marker)
+            
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+            # TF not ready yet
+            pass
 
     def _publish_state(self):
         msg = Bool()

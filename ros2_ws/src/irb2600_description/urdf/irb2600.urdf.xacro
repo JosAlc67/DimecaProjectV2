@@ -84,7 +84,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/wavy_panel.stl"/>
+        <mesh filename="package://irb2600_coating_cell/meshes/tank.stl"/>
       </geometry>
       <material name="panel_white">
         <color rgba="1.0 1.0 1.0 1.0"/>
@@ -93,15 +93,16 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/wavy_panel.stl"/>
+        <mesh filename="package://irb2600_coating_cell/meshes/tank.stl"/>
       </geometry>
     </collision>
   </link>
 
+  <!-- Mount target panel to world at the center of the track reach -->
   <joint name="world_to_panel" type="fixed">
     <parent link="world"/>
     <child link="target_panel"/>
-    <origin xyz="1.5 -2.25 1.5" rpy="0 0 0"/>
+    <origin xyz="1.5 -2.25 1.0" rpy="0 0 0"/>
   </joint>
 
   <!-- Load robot -->

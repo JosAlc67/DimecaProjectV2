@@ -86,7 +86,7 @@ class PerceptionSimNode(Node):
         )
 
         self._dynamic_poses = {}
-        self._im_server = InteractiveMarkerServer(self, "perception_markers")
+        self._im_server = InteractiveMarkerServer(self, "/perception_markers")
         self._init_interactive_markers()
 
         rate_hz = float(self.get_parameter("publish_rate_hz").value)
@@ -131,7 +131,7 @@ class PerceptionSimNode(Node):
         marker.color.r = 1.0
         marker.color.g = 1.0
         marker.color.b = 0.0
-        marker.color.a = 0.8
+        marker.color.a = 1.0
         visual_control.markers.append(marker)
         
         im.controls.append(visual_control)

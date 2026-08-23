@@ -63,7 +63,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 
 from irb2600_coating_cell.geometry_utils import quaternion_from_rpy
 
-_TARGET_COLOR = ColorRGBA(r=0.2, g=0.5, b=1.0, a=0.6)
+_TARGET_COLOR = ColorRGBA(r=0.2, g=0.5, b=1.0, a=1.0)
 
 # Cycled by obstacle index so an arbitrary-length obstacle list always gets
 # a distinct, readable color instead of everything defaulting to the same
@@ -134,8 +134,12 @@ class SceneSetupNode(Node):
             f"Waiting for /apply_planning_scene (provided by move_group)... "
             f"obstacles={self._obstacle_names}"
         )
-        self._apply_scene_client.wait_for_service()
-        self._apply_scene()
+        if self._apply_scene_client.wait_for_service(timeout_sec=5.0):
+            self._apply_scene()
+        else:
+            self.get_logger().error("Service /apply_planning_scene not available, proceeding to spin anyway so markers can be published.")
+            # We still publish markers even if move_group isn't up
+            self._publish_markers()
 
     def _make_obstacle_pose_callback(self, name):
         def callback(msg):

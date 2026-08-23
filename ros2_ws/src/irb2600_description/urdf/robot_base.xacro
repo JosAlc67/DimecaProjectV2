@@ -30,8 +30,8 @@
   <joint name="base_mesh_joint" type="fixed">
     <parent link="platform_link"/>
     <child link="base_mesh"/>
-    <!-- Use original RPY so pedestal perfectly mounts on the carriage hole -->
-    <origin xyz="0.65 0.6 1.5" rpy="-1.5708 0 0"/>
+    <!-- Center the pedestal on the carriage plate and lower it so it rests physically on the plate -->
+    <origin xyz="0.65 0.451 0.867" rpy="-1.5708 0 0"/>
   </joint>
 
   <joint name="base_robot_joint" type="fixed">

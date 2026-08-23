@@ -185,7 +185,7 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         
         goal.request.workspace_parameters.header.frame_id = "world"
         goal.request.workspace_parameters.min_corner.x = -5.0
-        goal.request.workspace_parameters.min_corner.y = -5.0
+        goal.request.workspace_parameters.min_corner.y = -10.0
         goal.request.workspace_parameters.min_corner.z = 0.0
         goal.request.workspace_parameters.max_corner.x = 5.0
         goal.request.workspace_parameters.max_corner.y = 10.0

@@ -28,9 +28,11 @@
   </link>
 
   <joint name="base_mesh_joint" type="fixed">
-    <parent link="world"/>
+    <parent link="platform_link"/>
     <child link="base_mesh"/>
-    <origin xyz="0 0 0.209" rpy="0 0 0"/>
+    <!-- The platform STL Z size is ~4.18m but that's probably length, let's assume thickness is much smaller. We'll adjust Z offset if needed later. -->
+    <!-- Let's put Z=0.1 for now until we can visualize it. -->
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
   </joint>
 
   <joint name="base_robot_joint" type="fixed">

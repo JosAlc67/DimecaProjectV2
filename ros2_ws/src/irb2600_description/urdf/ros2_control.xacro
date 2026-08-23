@@ -16,6 +16,11 @@
       <hardware>
         <plugin>mock_components/GenericSystem</plugin>
       </hardware>
+      <joint name="track_prismatic_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
       <joint name="${prefix}joint_1">
         <command_interface name="position"/>
         <state_interface name="position"/>

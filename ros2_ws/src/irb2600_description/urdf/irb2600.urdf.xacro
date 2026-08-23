@@ -1,30 +1,85 @@
 <?xml version="1.0"?>
 <robot name="abb_irb2600_coating_cell" xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <!--
-    ROS 2 equivalent of RAMEL-ESPOL/IRB2600-ABB irb2600_description/urdf/irb2600_main.xacro,
-    trimmed to what the DIMECA coating-cell digital prototype needs: the bare robot on
-    its pedestal plus the spray-nozzle end effector. Table/wall/other tool variants from
-    the original file were dropped; the target structure and obstacle are NOT part of
-    this URDF (they are inserted as collision objects into the MoveIt planning scene at
-    runtime by irb2600_coating_cell, since the report treats the obstacle as dynamic).
-  -->
-
   <link name="world"/>
 
-  <!--
-    materials.xacro is included exactly once, here, before anything that
-    uses xacro:material_abb_orange. xacro does not deduplicate repeated
-    xacro:include of the same file, and urdfdom rejects a <material> name
-    that is defined (i.e. with a color/texture child) more than once, so
-    irb2600_macro.xacro and spray_nozzle.xacro must NOT also include it.
-  -->
+  <!-- Included macros -->
   <xacro:include filename="$(find irb2600_description)/urdf/materials.xacro"/>
   <xacro:include filename="$(find irb2600_description)/urdf/irb2600_macro.xacro"/>
   <xacro:include filename="$(find irb2600_description)/urdf/robot_base.xacro"/>
   <xacro:include filename="$(find irb2600_description)/urdf/spray_nozzle.xacro"/>
   <xacro:include filename="$(find irb2600_description)/urdf/ros2_control.xacro"/>
 
+  <!-- Track and Platform Links -->
+  <link name="track_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://irb2600_coating_cell/meshes/Riel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="pedestal_coral"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://irb2600_coating_cell/meshes/Riel.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="500.0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <link name="platform_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://irb2600_coating_cell/meshes/PlataformaRiel.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="pedestal_coral"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://irb2600_coating_cell/meshes/PlataformaRiel.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="50.0"/>
+      <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.1"/>
+    </inertial>
+  </link>
+
+  <!-- Joints connecting World -> Track -> Platform -->
+  <!-- Assume the track lies flat on the ground. We might need to adjust RPY if the STL Z is the length -->
+  <!-- The user said Z is 8610, which means the track is aligned with Z. If it should be horizontal (Y axis), we rotate it. -->
+  <!-- Let's keep it as is first, we can view it in RViz later. -->
+  <joint name="world_to_track_joint" type="fixed">
+    <parent link="world"/>
+    <child link="track_link"/>
+    <!-- Rotate so the 8.6m Z-axis of the STL becomes the Y-axis of the world -->
+    <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+  </joint>
+
+  <!-- Prismatic joint for the linear track -->
+  <joint name="track_prismatic_joint" type="prismatic">
+    <parent link="track_link"/>
+    <child link="platform_link"/>
+    <!-- The track slides along the STL's Z axis (which is now world Y) -->
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <!-- Limits: from 0 to roughly the length of the track minus platform -->
+    <limit lower="0.0" upper="4.5" effort="1000.0" velocity="0.5"/>
+  </joint>
+
+  <!-- Mount the robot's base_mesh to the platform -->
+  <!-- In robot_base.xacro, base_mesh attaches to 'world'. We will change that file later so it attaches to 'platform_link'. -->
+  <!-- Or we can just not include robot_base.xacro and do it here? robot_base.xacro has base_mesh_joint. -->
+
+  <!-- Load robot -->
   <xacro:abb_irb2600 prefix=""/>
   <xacro:abb_irb2600_ros2_control prefix=""/>
 

@@ -11,6 +11,7 @@ controller_manager:
 irb2600_arm_controller:
   ros__parameters:
     joints:
+      - track_prismatic_joint
       - joint_1
       - joint_2
       - joint_3

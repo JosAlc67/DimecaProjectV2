@@ -9,6 +9,7 @@ moveit_simple_controller_manager:
     type: FollowJointTrajectory
     default: true
     joints:
+      - track_prismatic_joint
       - joint_1
       - joint_2
       - joint_3

@@ -83,9 +83,9 @@ class SceneSetupNode(Node):
         super().__init__("scene_setup_node")
 
         self.declare_parameter("target_structure.frame_id", "world")
-        self.declare_parameter("target_structure.position", [1.0, 0.0, 1.0])
+        self.declare_parameter("target_structure.position", [1.5, 3.0, 1.5])
         self.declare_parameter("target_structure.orientation_rpy", [0.0, 0.0, 0.0])
-        self.declare_parameter("target_structure.size", [0.02, 1.0, 0.6])
+        self.declare_parameter("target_structure.size", [0.05, 5.0, 2.0])
 
         # Fallback single-obstacle name if the "obstacles" parameter isn't
         # provided by a params file (e.g. running this node standalone).
@@ -289,10 +289,8 @@ class SceneSetupNode(Node):
         colors = self._object_colors()
         target_frame, target_position, target_orientation, target_size = self._target_pose()
         markers = [
-            # Bright, unmistakable dot at the panel's reference/center point
-            # (the same point raster_path.py builds the coating sweep from).
-            self._make_point_marker(
-                999, target_frame, target_position, ColorRGBA(r=1.0, g=1.0, b=0.0, a=1.0)
+            self._make_marker(
+                999, "target_structure", target_frame, target_position, target_orientation, target_size, "box", colors["target_structure"]
             ),
         ]
 

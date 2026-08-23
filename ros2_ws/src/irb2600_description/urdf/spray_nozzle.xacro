@@ -52,8 +52,9 @@
   <joint name="tool0_to_spray_nozzle" type="fixed">
     <parent link="tool0"/>
     <child link="spray_nozzle_link"/>
-    <!-- CobraPaintTool length is along its X axis. We pitch by -90 deg to align it with tool0's Z axis (outward). -->
-    <origin xyz="0 0 0" rpy="0 -1.5708 0"/>
+    <!-- CobraPaintTool length is along its X axis, and its mounting plate center is offset in Y and Z. 
+         We pitch by -90 deg to align X with tool0's Z axis (outward), and offset XYZ to center it on the flange. -->
+    <origin xyz="0.054 -0.056 0" rpy="0 -1.5708 0"/>
   </joint>
 
   <!-- TCP: x_e in the preliminary mathematical model (report eq. 1-2, 8-9) -->

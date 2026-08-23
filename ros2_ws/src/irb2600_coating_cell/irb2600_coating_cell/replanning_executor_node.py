@@ -33,9 +33,9 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
 
         # Target point configuration (will fallback to this if no sensor reading)
         self.declare_parameter("target_structure.frame_id", "world")
-        self.declare_parameter("target_structure.position", [0.2, -2.05, 1.0])
+        self.declare_parameter("target_structure.position", [0.6, -2.05, 1.0])
         self.declare_parameter("target_structure.mesh_file", "package://irb2600_coating_cell/meshes/curved_panel.stl")
-        self.declare_parameter("d_standoff", 0.15)
+        self.declare_parameter("d_standoff", 0.3)
         
         self.declare_parameter("group_name", "manipulator")
         self.declare_parameter("tcp_link", "nozzle_tip")

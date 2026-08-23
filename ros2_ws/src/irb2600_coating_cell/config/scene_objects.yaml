@@ -13,29 +13,12 @@
   ros__parameters:
     target_structure:
       frame_id: "world"
-      # Panel center. Box is thin along local X; the report's 1.0 x 0.6 m
-      # useful area (Table VIII) is modeled as width along Y, height along Z.
-      # Pushed out to x=1.8 (report Table VII: up to 1.85 m reach -- with
-      # d_standoff=0.20 the farthest raster waypoint corner sits at a
-      # radial distance of ~1.65 m from the base, still ~0.2 m short of
-      # max reach) to leave the arm real room to maneuver between the
-      # base, the obstacles, and the panel.
-      position: [1.8, 0.0, 1.0]
+      position: [1.5, -2.0, 1.5]
       orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.02, 1.0, 0.6]
-      # Outward normal in the panel's own local frame (rotated by
-      # orientation_rpy to get the world-frame surface_normal). With the
-      # identity orientation above, the panel occupies local +X and opens
-      # towards the robot at local -X.
+      size: [0.05, 5.0, 2.0]
       local_normal: [-1.0, 0.0, 0.0]
 
-    # Named list of temporary obstacles. Each name below must also have its
-    # own <name>.type/frame_id/position/orientation_rpy/size block -- this is
-    # the standard ROS 2 pattern for a dynamic list of named sub-configs
-    # (no native "list of structs" parameter type). scene_setup_node inserts
-    # one CollisionObject per name (id = name); perception_sim_node publishes
-    # each one's pose on its own topic (/obstacles/<name>/pose).
-    obstacles: ["bottom_wall", "top_wall", "left_pillar", "right_pillar", "back_pole"]
+    obstacles: []
 
     # A complex obstacle course forming a 'window' at x=1.0
     # The robot must thread its arm through a small gap to reach the target.

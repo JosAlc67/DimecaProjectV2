@@ -30,9 +30,8 @@
   <joint name="base_mesh_joint" type="fixed">
     <parent link="platform_link"/>
     <child link="base_mesh"/>
-    <!-- The platform STL Z size is ~4.18m but that's probably length, let's assume thickness is much smaller. We'll adjust Z offset if needed later. -->
-    <!-- Let's put Z=0.1 for now until we can visualize it. -->
-    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    <!-- The platform's Y axis points UP (World Z), so we offset in Y to place it on top, and rotate -90 deg around X to make the robot's Z point UP. -->
+    <origin xyz="0.65 0.6 1.5" rpy="-1.5708 0 0"/>
   </joint>
 
   <joint name="base_robot_joint" type="fixed">

@@ -83,13 +83,13 @@ class SceneSetupNode(Node):
         super().__init__("scene_setup_node")
 
         self.declare_parameter("target_structure.frame_id", "world")
-        self.declare_parameter("target_structure.position", [1.5, 3.0, 1.5])
+        self.declare_parameter("target_structure.position", [1.5, -2.0, 1.5])
         self.declare_parameter("target_structure.orientation_rpy", [0.0, 0.0, 0.0])
         self.declare_parameter("target_structure.size", [0.05, 5.0, 2.0])
 
         # Fallback single-obstacle name if the "obstacles" parameter isn't
         # provided by a params file (e.g. running this node standalone).
-        self.declare_parameter("obstacles", ["temporary_obstacle"])
+        self.declare_parameter("obstacles", [])
         self._obstacle_names = list(self.get_parameter("obstacles").value)
 
         for name in self._obstacle_names:

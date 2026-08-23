@@ -60,19 +60,19 @@
   <joint name="world_to_track_joint" type="fixed">
     <parent link="world"/>
     <child link="track_link"/>
-    <!-- Rotate 180 around Z to put cables on the back. Shift Y by -8.6 to keep track in the same space -->
-    <origin xyz="0 -8.6 0" rpy="1.5708 0 3.14159265359"/>
+    <origin xyz="0 0 0" rpy="1.5708 0 0"/>
   </joint>
 
   <!-- Prismatic joint for the linear track -->
   <joint name="track_prismatic_joint" type="prismatic">
     <parent link="track_link"/>
     <child link="platform_link"/>
-    <!-- The track slides along the STL's Z axis (which is now world Y) -->
+    <!-- The STL's Z-axis corresponds to the length of the track -->
     <axis xyz="0 0 1"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <!-- Limits: from 0 to roughly the length of the track minus platform -->
-    <limit lower="0.0" upper="4.5" effort="1000.0" velocity="0.5"/>
+    <!-- The physical track limits. Since we rotated it, +Z moves along world -Y -->
+    <limit lower="0.0" upper="4.5" effort="1000.0" velocity="1.0"/>
+    <!-- The origin of the platform relative to the track's slider center -->
+    <origin xyz="0 0.25 0" rpy="0 0 0"/>
   </joint>
 
   <!-- Mount the robot's base_mesh to the platform -->
@@ -102,7 +102,7 @@
   <joint name="world_to_panel" type="fixed">
     <parent link="world"/>
     <child link="target_panel"/>
-    <origin xyz="1.1 -4.85 1.0" rpy="0 0 0"/>
+    <origin xyz="1.5 -2.25 1.0" rpy="0 0 0"/>
   </joint>
 
   <!-- Load robot -->

@@ -33,8 +33,8 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
 
         # Target point configuration (will fallback to this if no sensor reading)
         self.declare_parameter("target_structure.frame_id", "world")
-        self.declare_parameter("target_structure.position", [1.1, -4.85, 1.0])
-        self.declare_parameter("target_structure.mesh_file", "package://irb2600_coating_cell/meshes/tank.stl")
+        self.declare_parameter("target_structure.position", [1.5, -2.25, 1.0])
+        self.declare_parameter("target_structure.mesh_file", "package://irb2600_coating_cell/meshes/curved_panel.stl")
         self.declare_parameter("d_standoff", 0.15)
         
         self.declare_parameter("group_name", "manipulator")
@@ -91,10 +91,10 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         step_y = p("raster_step_y").value
         
         bounds = mesh.bounds
-        z_min = bounds[0][2] + 0.35
-        z_max = bounds[1][2] - 0.35
-        y_min = bounds[0][1] + 0.2
-        y_max = bounds[1][1] - 0.2
+        z_min = bounds[0][2] + 0.1
+        z_max = bounds[1][2] - 0.1
+        y_min = bounds[0][1] + 0.1
+        y_max = bounds[1][1] - 0.1
         
         path = []
         current_z = z_max

@@ -13,11 +13,11 @@
   ros__parameters:
     target_structure:
       frame_id: "world"
-      position: [1.1, -4.85, 1.0]
+      position: [1.5, -2.25, 1.0]
       orientation_rpy: [0.0, 0.0, 0.0]
       size: [0.05, 5.0, 2.0]
       local_normal: [-1.0, 0.0, 0.0]
-      mesh_file: "package://irb2600_coating_cell/meshes/tank.stl"
+      mesh_file: "package://irb2600_coating_cell/meshes/curved_panel.stl"
 
     obstacles: []
 

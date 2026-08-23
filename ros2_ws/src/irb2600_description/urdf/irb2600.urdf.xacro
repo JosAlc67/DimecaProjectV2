@@ -79,6 +79,31 @@
   <!-- In robot_base.xacro, base_mesh attaches to 'world'. We will change that file later so it attaches to 'platform_link'. -->
   <!-- Or we can just not include robot_base.xacro and do it here? robot_base.xacro has base_mesh_joint. -->
 
+  <!-- Hardcoded Target Panel for guaranteed visibility in RViz without DDS issues -->
+  <link name="target_panel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 5.0 2.0"/>
+      </geometry>
+      <material name="panel_blue">
+        <color rgba="0.2 0.5 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 5.0 2.0"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="world_to_panel" type="fixed">
+    <parent link="world"/>
+    <child link="target_panel"/>
+    <origin xyz="1.5 -4.5 1.5" rpy="0 0 0"/>
+  </joint>
+
   <!-- Load robot -->
   <xacro:abb_irb2600 prefix=""/>
   <xacro:abb_irb2600_ros2_control prefix=""/>

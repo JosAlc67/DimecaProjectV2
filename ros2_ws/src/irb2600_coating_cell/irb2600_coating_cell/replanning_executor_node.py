@@ -84,10 +84,6 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
             
         self.get_logger().info(f"Loading mesh for 3D CPP from {mesh_path}")
         mesh = trimesh.load(mesh_path)
-        
-        # Apply the exact same transformations as the URDF visual
-        rot_matrix = trimesh.transformations.rotation_matrix(math.pi/2, [1, 0, 0])
-        mesh.apply_transform(rot_matrix)
         mesh.apply_translation(center_pos)
         
         p = self.get_parameter

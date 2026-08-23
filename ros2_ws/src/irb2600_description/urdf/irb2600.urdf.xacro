@@ -82,7 +82,7 @@
   <!-- Hardcoded Target Panel for guaranteed visibility in RViz without DDS issues -->
   <link name="target_panel">
     <visual>
-      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh filename="package://irb2600_coating_cell/meshes/wavy_panel.stl"/>
       </geometry>
@@ -91,7 +91,7 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh filename="package://irb2600_coating_cell/meshes/wavy_panel.stl"/>
       </geometry>

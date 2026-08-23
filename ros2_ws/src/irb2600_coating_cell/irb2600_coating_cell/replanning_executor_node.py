@@ -13,6 +13,7 @@ from shape_msgs.msg import SolidPrimitive
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
+from std_srvs.srv import SetBool
 
 from irb2600_coating_cell.geometry_utils import quaternion_with_z_axis, rotate_vector_by_quaternion
 from irb2600_coating_cell.stoppable import StoppableActionNode

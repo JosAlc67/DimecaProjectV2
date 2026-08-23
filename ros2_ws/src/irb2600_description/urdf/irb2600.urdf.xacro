@@ -60,8 +60,8 @@
   <joint name="world_to_track_joint" type="fixed">
     <parent link="world"/>
     <child link="track_link"/>
-    <!-- Rotate so the 8.6m Z-axis of the STL becomes the Y-axis of the world -->
-    <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+    <!-- Rotate 180 around Z to put cables on the back. Shift Y by -8.6 to keep track in the same space -->
+    <origin xyz="0 -8.6 0" rpy="1.5708 0 3.14159265359"/>
   </joint>
 
   <!-- Prismatic joint for the linear track -->
@@ -102,7 +102,7 @@
   <joint name="world_to_panel" type="fixed">
     <parent link="world"/>
     <child link="target_panel"/>
-    <origin xyz="2.4 -2.25 1.0" rpy="0 0 0"/>
+    <origin xyz="1.1 -4.85 1.0" rpy="0 0 0"/>
   </joint>
 
   <!-- Load robot -->

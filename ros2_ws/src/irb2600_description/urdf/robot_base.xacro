@@ -30,8 +30,8 @@
   <joint name="base_mesh_joint" type="fixed">
     <parent link="platform_link"/>
     <child link="base_mesh"/>
-    <!-- The platform's Y axis points UP (World Z), so we offset in Y to place it on top, and rotate -90 deg around X to make the robot's Z point UP. -->
-    <origin xyz="0.65 0.6 1.5" rpy="-1.5708 0 0"/>
+    <!-- Add 180 yaw (-3.14159) to keep robot facing World +X despite platform rotation -->
+    <origin xyz="0.65 0.6 1.5" rpy="1.5708 0 3.14159265359"/>
   </joint>
 
   <joint name="base_robot_joint" type="fixed">

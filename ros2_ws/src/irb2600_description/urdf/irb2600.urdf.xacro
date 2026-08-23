@@ -85,7 +85,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/tank.stl"/>
+        <mesh filename="package://irb2600_coating_cell/meshes/curved_panel.stl"/>
       </geometry>
       <material name="panel_white">
         <color rgba="1.0 1.0 1.0 1.0"/>
@@ -94,7 +94,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/tank.stl"/>
+        <mesh filename="package://irb2600_coating_cell/meshes/curved_panel.stl"/>
       </geometry>
     </collision>
   </link>

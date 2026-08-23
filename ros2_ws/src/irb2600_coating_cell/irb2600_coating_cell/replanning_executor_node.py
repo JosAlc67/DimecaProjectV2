@@ -32,7 +32,7 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
 
         # Target point configuration (will fallback to this if no sensor reading)
         self.declare_parameter("target_structure.frame_id", "world")
-        self.declare_parameter("target_structure.position", [1.5, 3.0, 1.5])
+        self.declare_parameter("target_structure.position", [1.5, -2.0, 1.5])
         self.declare_parameter("target_structure.size", [0.05, 5.0, 2.0])
         self.declare_parameter("target_structure.local_normal", [-1.0, 0.0, 0.0])
         self.declare_parameter("d_standoff", 0.15)

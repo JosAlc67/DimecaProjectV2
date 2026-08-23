@@ -217,9 +217,13 @@ class SceneSetupNode(Node):
         return frame_id, position, orientation, size, obstacle_type
 
     def _build_collision_objects(self):
-        # We no longer add target_structure as a collision object because the user
-        # just wants to reach a point without the panel acting as an obstacle.
         objects = []
+        
+        # Add the target structure as a collision object so it renders in RViz
+        target_frame, target_pos, target_quat, target_size = self._target_pose()
+        objects.append(
+            self._make_box_object("target_structure", target_frame, target_pos, target_quat, target_size)
+        )
 
         for name in self._obstacle_names:
             frame_id, position, orientation, size, obstacle_type = self._obstacle_pose(name)

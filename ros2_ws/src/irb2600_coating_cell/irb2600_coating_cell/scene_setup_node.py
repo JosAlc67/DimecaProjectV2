@@ -123,10 +123,8 @@ class SceneSetupNode(Node):
             )
         self.create_subscription(Bool, "/workspace_clear", self._on_workspace_clear, 10)
 
-        transient_local_qos = QoSProfile(depth=1)
-        transient_local_qos.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
         self._marker_pub = self.create_publisher(
-            MarkerArray, "~/scene_markers", transient_local_qos
+            MarkerArray, "/scene_setup_node/scene_markers", 10
         )
         self.create_timer(2.0, self._publish_markers)
 

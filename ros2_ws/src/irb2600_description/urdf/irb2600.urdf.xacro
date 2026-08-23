@@ -64,14 +64,32 @@
     <origin xyz="0 -4.3 0" rpy="1.5708 0 3.14159265359"/>
   </joint>
 
+  <!-- ENLACES TEMPORALES PARA AJUSTE EN RVIZ -->
+  <link name="tune_x_link"/>
+  <link name="tune_y_link"/>
+
+  <joint name="tune_x_joint" type="prismatic">
+    <parent link="track_link"/>
+    <child link="tune_x_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-0.5" upper="0.5" effort="10" velocity="1"/>
+  </joint>
+
+  <joint name="tune_y_joint" type="prismatic">
+    <parent link="tune_x_link"/>
+    <child link="tune_y_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.5" upper="0.5" effort="10" velocity="1"/>
+  </joint>
+
   <!-- Prismatic joint for the linear track -->
   <joint name="track_prismatic_joint" type="prismatic">
-    <parent link="track_link"/>
+    <parent link="tune_y_link"/>
     <child link="platform_link"/>
-    <!-- Ajuste manual de encaje:
-         - X mueve la plataforma izquierda/derecha. Modificar para alinear la abertura con el riel.
-         - Y mueve la plataforma arriba/abajo. Modificar para incrustar la abertura en el riel. -->
-    <origin xyz="-0.130 0.05 0" rpy="0 0 0"/>
+    <!-- Origen en 0 porque los sliders de X y Y harán todo el trabajo -->
+    <origin xyz="0 0 0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <!-- The physical track limits. Since we rotated it, +Z moves along world -Y -->
     <limit lower="0.0" upper="4.5" effort="1000.0" velocity="1.0"/>

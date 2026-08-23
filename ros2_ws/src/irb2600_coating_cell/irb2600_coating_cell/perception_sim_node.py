@@ -118,6 +118,24 @@ class PerceptionSimNode(Node):
         im.pose.position.z = position[2]
         im.pose.orientation = quaternion_from_rpy(*rpy)
 
+        # Add a visual cube
+        visual_control = InteractiveMarkerControl()
+        visual_control.always_visible = True
+        
+        from visualization_msgs.msg import Marker
+        marker = Marker()
+        marker.type = Marker.CUBE
+        marker.scale.x = 0.5
+        marker.scale.y = 0.5
+        marker.scale.z = 0.5
+        marker.color.r = 1.0
+        marker.color.g = 1.0
+        marker.color.b = 0.0
+        marker.color.a = 0.8
+        visual_control.markers.append(marker)
+        
+        im.controls.append(visual_control)
+
         # Move 3D control
         control = InteractiveMarkerControl()
         control.always_visible = True

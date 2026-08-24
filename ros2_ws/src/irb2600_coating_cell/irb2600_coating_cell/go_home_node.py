@@ -15,7 +15,7 @@ from rclpy.node import Node
 
 from irb2600_coating_cell.stoppable import StoppableActionNode
 
-_ARM_JOINTS = ["joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"]
+_ARM_JOINTS = ["track_prismatic_joint", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"]
 
 
 class GoHomeNode(StoppableActionNode, Node):

@@ -64,32 +64,12 @@
     <origin xyz="0 -4.3 0" rpy="1.5708 0 3.14159265359"/>
   </joint>
 
-  <!-- ENLACES TEMPORALES PARA AJUSTE EN RVIZ -->
-  <link name="tune_x_link"/>
-  <link name="tune_y_link"/>
-
-  <joint name="tune_x_joint" type="prismatic">
-    <parent link="track_link"/>
-    <child link="tune_x_link"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <axis xyz="1 0 0"/>
-    <limit lower="-0.5" upper="0.5" effort="10" velocity="1"/>
-  </joint>
-
-  <joint name="tune_y_joint" type="prismatic">
-    <parent link="tune_x_link"/>
-    <child link="tune_y_link"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit lower="-0.5" upper="0.5" effort="10" velocity="1"/>
-  </joint>
-
   <!-- Prismatic joint for the linear track -->
   <joint name="track_prismatic_joint" type="prismatic">
-    <parent link="tune_y_link"/>
+    <parent link="track_link"/>
     <child link="platform_link"/>
-    <!-- Origen en 0 porque los sliders de X y Y harán todo el trabajo -->
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <!-- Valores precisos sintonizados visualmente por el usuario en RViz -->
+    <origin xyz="0.084 0.035 0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <!-- The physical track limits. Since we rotated it, +Z moves along world -Y -->
     <limit lower="0.0" upper="4.5" effort="1000.0" velocity="1.0"/>
@@ -114,11 +94,11 @@
     </collision>
   </link>
 
-  <!-- Mount target panel to world at the center of the track reach -->
+  <!-- Mount target panel to world at the center of the track reach, moved closer to X=0.0 to prevent reach limit errors -->
   <joint name="world_to_target_panel" type="fixed">
     <parent link="world"/>
     <child link="target_panel"/>
-    <origin xyz="0.6 -1.2 1.0" rpy="0 0 0"/>
+    <origin xyz="0.0 -1.2 1.0" rpy="0 0 0"/>
   </joint>
 
   <!-- Load robot -->

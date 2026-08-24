@@ -13,7 +13,7 @@
   ros__parameters:
     target_structure:
       frame_id: "world"
-      position: [0.6, -1.2, 1.0]
+      position: [0.0, -1.2, 1.0]
       orientation_rpy: [0.0, 0.0, 0.0]
       size: [0.05, 5.0, 2.0]
       local_normal: [-1.0, 0.0, 0.0]

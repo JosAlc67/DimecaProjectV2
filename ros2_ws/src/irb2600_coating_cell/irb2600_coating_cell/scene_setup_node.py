@@ -89,8 +89,8 @@ class SceneSetupNode(Node):
 
         # Fallback single-obstacle name if the "obstacles" parameter isn't
         # provided by a params file (e.g. running this node standalone).
-        self.declare_parameter("obstacles", [])
-        self._obstacle_names = list(self.get_parameter("obstacles").value)
+        self.declare_parameter("obstacles", [""])
+        self._obstacle_names = [n for n in self.get_parameter("obstacles").value if n]
 
         for name in self._obstacle_names:
             self.declare_parameter(f"{name}.frame_id", "world")

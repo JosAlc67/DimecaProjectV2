@@ -19,7 +19,7 @@
       local_normal: [-1.0, 0.0, 0.0]
       mesh_file: "package://irb2600_coating_cell/meshes/curved_panel.stl"
 
-    obstacles: []
+    obstacles: ["bottom_wall", "top_wall", "left_pillar", "right_pillar", "back_pole"]
 
     # A complex obstacle course forming a 'window' at x=1.0
     # The robot must thread its arm through a small gap to reach the target.

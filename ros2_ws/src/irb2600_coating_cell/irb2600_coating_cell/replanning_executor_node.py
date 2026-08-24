@@ -218,17 +218,13 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                 
                 self._set_spray(True)
                 self._execute_client.wait_for_server()
-                exec_future = self._execute_client.send_goal_async(exec_goal)
-                rclpy.spin_until_future_complete(self, exec_future)
+                exec_result = self._send_goal_and_wait(self._execute_client, exec_goal)
                 
-                goal_handle = exec_future.result()
-                if not goal_handle.accepted:
-                    self.get_logger().error("Execution rejected.")
+                if exec_result is None:
+                    self.get_logger().error("Execution was rejected or cancelled.")
                     self._set_spray(False)
                     return False
                     
-                result_future = goal_handle.get_result_async()
-                rclpy.spin_until_future_complete(self, result_future)
                 self._set_spray(False)
             else:
                 self.get_logger().error(f"Failed to compute Cartesian path. Error code: {res.error_code.val}")

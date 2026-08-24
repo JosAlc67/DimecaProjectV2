@@ -230,7 +230,9 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                         # Back off a bit if we hit an obstacle
                         if res.fraction < 0.99:
                             num_points = len(res.solution.joint_trajectory.points)
-                            safe_len = max(1, num_points - 3)
+                            # Cut off the last 8 points (~40cm of TCP travel) so it visibly 
+                            # stops safely away from the obstacle instead of getting too close.
+                            safe_len = max(1, num_points - 8)
                             res.solution.joint_trajectory.points = res.solution.joint_trajectory.points[:safe_len]
                         
                         self.get_logger().info(f"Cartesian path computed (fraction: {res.fraction:.2f}). Executing...")

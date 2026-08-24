@@ -36,7 +36,7 @@ import rclpy
 from rclpy.parameter import Parameter
 
 from irb2600_coating_cell.go_home_node import GoHomeNode
-from irb2600_coating_cell.replanning_executor_node import ReplanningExecutorNode
+from irb2600_coating_cell.replanning_executor_node import CoveragePathExecutorNode
 
 
 class ControlPanelApp:
@@ -53,6 +53,14 @@ class ControlPanelApp:
 
         self._status_var = tk.StringVar(value="Ready.")
         ttk.Label(root, textvariable=self._status_var, padding=10).pack(fill="x")
+
+        # Passes Configuration Frame
+        config_frame = ttk.Frame(root, padding=10)
+        config_frame.pack(fill="x")
+        ttk.Label(config_frame, text="Número de pasadas:").pack(side="left", padx=5)
+        self._passes_var = tk.IntVar(value=1)
+        self._passes_spin = ttk.Spinbox(config_frame, from_=1, to=10, textvariable=self._passes_var, width=5)
+        self._passes_spin.pack(side="left", padx=5)
 
         button_frame = ttk.Frame(root, padding=10)
         button_frame.pack(fill="x")
@@ -82,8 +90,11 @@ class ControlPanelApp:
         )
 
     def _on_start_route(self):
+        passes = self._passes_var.get()
         self._run_in_background(
-            "Running route...", self._replanning_node, self._replanning_node.run_coverage
+            f"Running route ({passes} passes)...", 
+            self._replanning_node, 
+            lambda: self._replanning_node.run_coverage(num_passes=passes)
         )
 
     def _on_stop(self):
@@ -118,6 +129,7 @@ class ControlPanelApp:
         self._home_button.configure(state="disabled" if running else "normal")
         self._route_button.configure(state="disabled" if running else "normal")
         self._stop_button.configure(state="normal" if running else "disabled")
+        self._passes_spin.configure(state="disabled" if running else "normal")
 
     def _poll_events(self):
         try:
@@ -139,7 +151,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     go_home_node = GoHomeNode()
-    replanning_node = ReplanningExecutorNode(
+    replanning_node = CoveragePathExecutorNode(
         parameter_overrides=[Parameter("execute", Parameter.Type.BOOL, True)]
     )
 

@@ -34,7 +34,7 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
 
         # Target point configuration (will fallback to this if no sensor reading)
         self.declare_parameter("target_structure.frame_id", "world")
-        self.declare_parameter("target_structure.position", [0.0, -1.2, 1.0])
+        self.declare_parameter("target_structure.position", [0.0, -1.2, 1.5])
         self.declare_parameter("target_structure.mesh_file", "package://irb2600_coating_cell/meshes/curved_panel.stl")
         self.declare_parameter("d_standoff", 0.3)
         
@@ -160,7 +160,7 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                 val += step
         return points
 
-    def run_coverage(self):
+    def run_coverage(self, num_passes=1):
         self._clear_stop()
         p = self.get_parameter
         
@@ -177,58 +177,65 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         if not waypoints:
             return False
             
-        # 1. Point-to-Point move to the first waypoint
-        self.get_logger().info("Moving to start position...")
-        self._set_spray(False)
-        goal = self._build_move_goal(waypoints[0], frame_id)
-        result = self._send_goal_and_wait(self._move_group_client, goal)
-        if result is None or result.result.error_code.val != 1:
-            self.get_logger().error("Failed to reach start position.")
-            return False
+        for pass_idx in range(num_passes):
+            if not rclpy.ok() or self._stop_requested():
+                break
+                
+            self.get_logger().info(f"--- Starting pass {pass_idx+1}/{num_passes} ---")
             
-        # 2. Cartesian path for the remaining waypoints
-        self.get_logger().info("Computing smooth Cartesian path...")
-        req = GetCartesianPath.Request()
-        req.header.frame_id = frame_id
-        req.group_name = self.get_parameter("group_name").value
-        req.link_name = self.get_parameter("tcp_link").value
-        req.waypoints = waypoints[1:]
-        req.max_step = 0.05
-        req.jump_threshold = 0.0
-        req.avoid_collisions = True
-        
-        if not self._cartesian_client.wait_for_service(timeout_sec=2.0):
-            self.get_logger().error("Cartesian service not available!")
-            return False
-            
-        future = self._cartesian_client.call_async(req)
-        rclpy.spin_until_future_complete(self, future)
-        res = future.result()
-        
-        if res.fraction > 0.0:
-            self.get_logger().info(f"Cartesian path computed (fraction: {res.fraction:.2f}). Executing...")
-            exec_goal = ExecuteTrajectory.Goal()
-            exec_goal.trajectory = res.solution
-            
-            self._set_spray(True)
-            self._execute_client.wait_for_server()
-            exec_future = self._execute_client.send_goal_async(exec_goal)
-            rclpy.spin_until_future_complete(self, exec_future)
-            
-            goal_handle = exec_future.result()
-            if not goal_handle.accepted:
-                self.get_logger().error("Execution rejected.")
-                self._set_spray(False)
+            # 1. Point-to-Point move to the first waypoint
+            self.get_logger().info("Moving to start position...")
+            self._set_spray(False)
+            goal = self._build_move_goal(waypoints[0], frame_id)
+            result = self._send_goal_and_wait(self._move_group_client, goal)
+            if result is None or result.result.error_code.val != 1:
+                self.get_logger().error("Failed to reach start position.")
                 return False
                 
-            result_future = goal_handle.get_result_async()
-            rclpy.spin_until_future_complete(self, result_future)
-            self._set_spray(False)
-            self.get_logger().info("Coverage Path Execution Completed.")
-            return True
-        else:
-            self.get_logger().error(f"Failed to compute Cartesian path. Error code: {res.error_code.val}")
-            return False
+            # 2. Cartesian path for the remaining waypoints
+            self.get_logger().info("Computing smooth Cartesian path...")
+            req = GetCartesianPath.Request()
+            req.header.frame_id = frame_id
+            req.group_name = self.get_parameter("group_name").value
+            req.link_name = self.get_parameter("tcp_link").value
+            req.waypoints = waypoints[1:]
+            req.max_step = 0.05
+            req.jump_threshold = 0.0
+            req.avoid_collisions = True
+            
+            if not self._cartesian_client.wait_for_service(timeout_sec=2.0):
+                self.get_logger().error("Cartesian service not available!")
+                return False
+                
+            future = self._cartesian_client.call_async(req)
+            rclpy.spin_until_future_complete(self, future)
+            res = future.result()
+            
+            if res.fraction > 0.0:
+                self.get_logger().info(f"Cartesian path computed (fraction: {res.fraction:.2f}). Executing...")
+                exec_goal = ExecuteTrajectory.Goal()
+                exec_goal.trajectory = res.solution
+                
+                self._set_spray(True)
+                self._execute_client.wait_for_server()
+                exec_future = self._execute_client.send_goal_async(exec_goal)
+                rclpy.spin_until_future_complete(self, exec_future)
+                
+                goal_handle = exec_future.result()
+                if not goal_handle.accepted:
+                    self.get_logger().error("Execution rejected.")
+                    self._set_spray(False)
+                    return False
+                    
+                result_future = goal_handle.get_result_async()
+                rclpy.spin_until_future_complete(self, result_future)
+                self._set_spray(False)
+            else:
+                self.get_logger().error(f"Failed to compute Cartesian path. Error code: {res.error_code.val}")
+                return False
+                
+        self.get_logger().info("Coverage Path Execution Completed.")
+        return True
 
     def _set_spray(self, state):
         if not self._spray_client.wait_for_service(timeout_sec=1.0):

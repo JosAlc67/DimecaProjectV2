@@ -7,7 +7,8 @@ import time
 import math
 import rclpy
 from geometry_msgs.msg import Pose, PoseStamped
-from moveit_msgs.action import MoveGroup
+from moveit_msgs.action import MoveGroup, ExecuteTrajectory
+from moveit_msgs.srv import GetCartesianPath
 from moveit_msgs.msg import Constraints, PositionConstraint, OrientationConstraint, BoundingVolume
 from shape_msgs.msg import SolidPrimitive
 from rclpy.action import ActionClient
@@ -55,6 +56,8 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         
         from std_srvs.srv import SetBool
         self._spray_client = self.create_client(SetBool, "/spray_controller_node/set_spray_on")
+        self._cartesian_client = self.create_client(GetCartesianPath, 'compute_cartesian_path')
+        self._execute_client = ActionClient(self, ExecuteTrajectory, 'execute_trajectory')
 
     def _on_structure_pose(self, msg):
         self._latest_target_pose = msg
@@ -171,57 +174,60 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         waypoints = self._generate_mesh_coverage_path(mesh_file, pos, d_standoff)
         self.get_logger().info(f"Generated {len(waypoints)} dynamic 3D painting waypoints.")
         
-        for idx, target_pose in enumerate(waypoints):
-            if not rclpy.ok() or self._stop_requested():
-                break
-                
-            self.get_logger().info(
-                f"--- Painting Waypoint {idx+1}/{len(waypoints)}: "
-                f"y={target_pose.position.y:.2f}, z={target_pose.position.z:.2f} ---"
-            )
+        if not waypoints:
+            return False
             
-            # Try to reach the waypoint
-            attempts = 0
-            max_attempts = 3
-            waypoint_reached = False
-            
-            while rclpy.ok() and not self._stop_requested() and attempts < max_attempts:
-                attempts += 1
-                # Stop spraying before replanning/moving to a new discontinuous point
-                self._set_spray(False)
-                
-                goal = self._build_move_goal(target_pose, frame_id)
-                result = self._send_goal_and_wait(self._move_group_client, goal)
-                
-                if result is None:
-                    self.get_logger().error("Action server rejected the goal.")
-                    break
-                    
-                error_code = result.result.error_code.val
-                if error_code == SUCCESS:
-                    waypoint_reached = True
-                    # If we successfully moved, turn on spray for the NEXT continuous motion
-                    # (In a real system, you'd trigger this via a trajectory controller,
-                    # but for this simulation, triggering it after reaching a point starts
-                    # the trail for the subsequent movement).
-                    self._set_spray(True)
-                    break
-                elif error_code in [PREEMPTED, CONTROL_FAILED]:
-                    self.get_logger().warn(f"Dynamic obstacle encountered! Replanning (attempt {attempts})...")
-                    self._interruptible_sleep(1.0)
-                elif error_code == NO_IK_SOLUTION:
-                    self.get_logger().error(f"Waypoint {idx+1} unreachable (Kinematic limits of 7-DOF?). Skipping waypoint.")
-                    break
-                else:
-                    self.get_logger().warn(f"Failed to plan (code={error_code}). Retrying...")
-                    self._interruptible_sleep(1.0)
-            
-            if not waypoint_reached:
-                self.get_logger().warn(f"Skipping waypoint {idx+1} after failures.")
-
+        # 1. Point-to-Point move to the first waypoint
+        self.get_logger().info("Moving to start position...")
         self._set_spray(False)
-        self.get_logger().info("Coverage Path Execution Completed.")
-        return True
+        goal = self._build_move_goal(waypoints[0], frame_id)
+        result = self._send_goal_and_wait(self._move_group_client, goal)
+        if result is None or result.result.error_code.val != 1:
+            self.get_logger().error("Failed to reach start position.")
+            return False
+            
+        # 2. Cartesian path for the remaining waypoints
+        self.get_logger().info("Computing smooth Cartesian path...")
+        req = GetCartesianPath.Request()
+        req.header.frame_id = frame_id
+        req.group_name = self.get_parameter("group_name").value
+        req.waypoints = waypoints[1:]
+        req.max_step = 0.05
+        req.jump_threshold = 0.0
+        req.avoid_collisions = True
+        
+        if not self._cartesian_client.wait_for_service(timeout_sec=2.0):
+            self.get_logger().error("Cartesian service not available!")
+            return False
+            
+        future = self._cartesian_client.call_async(req)
+        rclpy.spin_until_future_complete(self, future)
+        res = future.result()
+        
+        if res.fraction > 0.0:
+            self.get_logger().info(f"Cartesian path computed (fraction: {res.fraction:.2f}). Executing...")
+            exec_goal = ExecuteTrajectory.Goal()
+            exec_goal.trajectory = res.solution
+            
+            self._set_spray(True)
+            self._execute_client.wait_for_server()
+            exec_future = self._execute_client.send_goal_async(exec_goal)
+            rclpy.spin_until_future_complete(self, exec_future)
+            
+            goal_handle = exec_future.result()
+            if not goal_handle.accepted:
+                self.get_logger().error("Execution rejected.")
+                self._set_spray(False)
+                return False
+                
+            result_future = goal_handle.get_result_async()
+            rclpy.spin_until_future_complete(self, result_future)
+            self._set_spray(False)
+            self.get_logger().info("Coverage Path Execution Completed.")
+            return True
+        else:
+            self.get_logger().error(f"Failed to compute Cartesian path. Error code: {res.error_code.val}")
+            return False
 
     def _set_spray(self, state):
         if not self._spray_client.wait_for_service(timeout_sec=1.0):

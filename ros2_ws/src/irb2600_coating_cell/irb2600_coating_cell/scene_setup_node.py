@@ -53,15 +53,18 @@ parameters directly and re-applying by hand:
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSProfile
-from geometry_msgs.msg import Pose, PoseStamped
+from geometry_msgs.msg import Pose, PoseStamped, Point
 from moveit_msgs.msg import CollisionObject, ObjectColor, PlanningScene
 from moveit_msgs.srv import ApplyPlanningScene
-from shape_msgs.msg import SolidPrimitive
+from shape_msgs.msg import SolidPrimitive, Mesh, MeshTriangle
 from std_msgs.msg import Bool, ColorRGBA
 from std_srvs.srv import Trigger
 from visualization_msgs.msg import Marker, MarkerArray
 
 from irb2600_coating_cell.geometry_utils import quaternion_from_rpy
+import os
+import trimesh
+from ament_index_python.packages import get_package_share_directory
 
 _TARGET_COLOR = ColorRGBA(r=0.2, g=0.5, b=1.0, a=1.0)
 
@@ -86,6 +89,7 @@ class SceneSetupNode(Node):
         self.declare_parameter("target_structure.position", [1.5, -2.0, 1.5])
         self.declare_parameter("target_structure.orientation_rpy", [0.0, 0.0, 0.0])
         self.declare_parameter("target_structure.size", [0.05, 5.0, 2.0])
+        self.declare_parameter("target_structure.mesh_file", "")
 
         # Fallback single-obstacle name if the "obstacles" parameter isn't
         # provided by a params file (e.g. running this node standalone).
@@ -185,17 +189,13 @@ class SceneSetupNode(Node):
     def _target_pose(self):
         p = self.get_parameter
         frame_id = p("target_structure.frame_id").value
-        size = p("target_structure.size").value
-        
-        if self._sensor_target_pose is not None:
-            position = [self._sensor_target_pose.position.x, self._sensor_target_pose.position.y, self._sensor_target_pose.position.z]
-            orientation = self._sensor_target_pose.orientation
-        else:
-            position = [float(v) for v in p("target_structure.position").value]
-            orientation = quaternion_from_rpy(
-                *[float(v) for v in p("target_structure.orientation_rpy").value]
-            )
-        return frame_id, position, orientation, size
+        position = [float(v) for v in p("target_structure.position").value]
+        orientation = quaternion_from_rpy(
+            *[float(v) for v in p("target_structure.orientation_rpy").value]
+        )
+        size = [float(v) for v in p("target_structure.size").value]
+        mesh_file = p("target_structure.mesh_file").value
+        return frame_id, position, orientation, size, mesh_file
 
     def _obstacle_pose(self, name):
         """(frame_id, position, orientation, size, type) for one obstacle,
@@ -218,8 +218,56 @@ class SceneSetupNode(Node):
 
         return frame_id, position, orientation, size, obstacle_type
 
+    def _make_mesh_object(self, object_id, frame_id, position, orientation, mesh_file):
+        obj = CollisionObject()
+        obj.header.frame_id = frame_id
+        obj.id = object_id
+        obj.operation = CollisionObject.ADD
+
+        # Load mesh
+        mesh_path = mesh_file
+        if mesh_file.startswith("package://"):
+            pkg_name = mesh_file.split("/")[2]
+            rel_path = "/".join(mesh_file.split("/")[3:])
+            try:
+                share_dir = get_package_share_directory(pkg_name)
+                mesh_path = os.path.join(share_dir, rel_path)
+            except Exception:
+                mesh_path = f"/home/josuealcivar/DimecaProjectV2/ros2_ws/src/{pkg_name}/{rel_path}"
+
+        if not os.path.exists(mesh_path):
+            self.get_logger().error(f"Mesh file not found: {mesh_path}")
+            return obj
+
+        tm = trimesh.load(mesh_path)
+        
+        mesh_msg = Mesh()
+        for v in tm.vertices:
+            pt = Point()
+            pt.x, pt.y, pt.z = float(v[0]), float(v[1]), float(v[2])
+            mesh_msg.vertices.append(pt)
+            
+        for f in tm.faces:
+            tri = MeshTriangle()
+            tri.vertex_indices = [int(f[0]), int(f[1]), int(f[2])]
+            mesh_msg.triangles.append(tri)
+
+        pose = Pose()
+        pose.position.x, pose.position.y, pose.position.z = (float(v) for v in position)
+        pose.orientation = orientation
+
+        obj.meshes = [mesh_msg]
+        obj.mesh_poses = [pose]
+        return obj
+
     def _build_collision_objects(self):
         objects = []
+        
+        target_frame, target_pos, target_quat, target_size, target_mesh = self._target_pose()
+        if target_mesh:
+            objects.append(
+                self._make_mesh_object("target_structure", target_frame, target_pos, target_quat, target_mesh)
+            )
         
         for name in self._obstacle_names:
             frame_id, position, orientation, size, obstacle_type = self._obstacle_pose(name)

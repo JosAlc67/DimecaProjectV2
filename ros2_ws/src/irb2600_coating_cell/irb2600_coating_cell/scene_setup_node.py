@@ -221,12 +221,6 @@ class SceneSetupNode(Node):
     def _build_collision_objects(self):
         objects = []
         
-        # Add the target structure as a collision object so it renders in RViz
-        target_frame, target_pos, target_quat, target_size = self._target_pose()
-        objects.append(
-            self._make_box_object("target_structure", target_frame, target_pos, target_quat, target_size)
-        )
-
         for name in self._obstacle_names:
             frame_id, position, orientation, size, obstacle_type = self._obstacle_pose(name)
             if obstacle_type == "cylinder":
@@ -292,13 +286,9 @@ class SceneSetupNode(Node):
         return marker
 
     def _build_markers(self):
+        markers = []
         colors = self._object_colors()
-        target_frame, target_position, target_orientation, target_size = self._target_pose()
-        markers = [
-            self._make_marker(
-                999, "target_structure", target_frame, target_position, target_orientation, target_size, "box", colors["target_structure"]
-            ),
-        ]
+        marker_id = 0
 
         for i, name in enumerate(self._obstacle_names):
             frame_id, position, orientation, size, obstacle_type = self._obstacle_pose(name)

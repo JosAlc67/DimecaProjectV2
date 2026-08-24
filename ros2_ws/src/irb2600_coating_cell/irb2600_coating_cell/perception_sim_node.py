@@ -99,11 +99,6 @@ class PerceptionSimNode(Node):
             rpy = [float(v) for v in self.get_parameter(f"{name}.orientation_rpy").value]
             self._create_6dof_marker(name, self.get_parameter(f"{name}.frame_id").value, pos, rpy)
             
-        # Create a marker for the target structure
-        pos = [float(v) for v in self.get_parameter("target_structure.position").value]
-        rpy = [float(v) for v in self.get_parameter("target_structure.orientation_rpy").value]
-        self._create_6dof_marker("target_structure", self.get_parameter("target_structure.frame_id").value, pos, rpy)
-        
         self._im_server.applyChanges()
 
     def _create_6dof_marker(self, name, frame_id, position, rpy):
@@ -117,25 +112,6 @@ class PerceptionSimNode(Node):
         im.pose.position.y = position[1]
         im.pose.position.z = position[2]
         im.pose.orientation = quaternion_from_rpy(*rpy)
-
-        # Add a visual cube
-        visual_control = InteractiveMarkerControl()
-        visual_control.always_visible = True
-        
-        from visualization_msgs.msg import Marker
-        marker = Marker()
-        marker.type = Marker.CUBE
-        marker.pose.orientation.w = 1.0
-        marker.scale.x = 0.5
-        marker.scale.y = 0.5
-        marker.scale.z = 0.5
-        marker.color.r = 1.0
-        marker.color.g = 1.0
-        marker.color.b = 0.0
-        marker.color.a = 1.0
-        visual_control.markers.append(marker)
-        
-        im.controls.append(visual_control)
 
         # Move 3D control
         control = InteractiveMarkerControl()

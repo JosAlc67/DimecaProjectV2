@@ -104,9 +104,9 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
             y_points = self._frange(y_min, y_max, step_y) if direction == 1 else self._frange(y_max, y_min, -step_y)
             
             for current_y in y_points:
-                # Shoot a ray from +X towards the mesh to find the surface
-                origin = np.array([[center_pos[0] + 1.0, current_y, current_z]])
-                direction_vec = np.array([[-1.0, 0.0, 0.0]])
+                # Shoot a ray from -X (robot side) towards the mesh to find the front surface
+                origin = np.array([[center_pos[0] - 1.0, current_y, current_z]])
+                direction_vec = np.array([[1.0, 0.0, 0.0]])
                 
                 locs, idx_ray, idx_tri = mesh.ray.intersects_location(
                     ray_origins=origin,
@@ -120,8 +120,8 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                     
                     # Get exact 3D surface normal
                     normal = mesh.face_normals[tri_idx]
-                    # Ensure normal points outwards (towards +X)
-                    if normal[0] < 0:
+                    # Ensure normal points outwards towards the robot (towards -X)
+                    if normal[0] > 0:
                         normal = -normal
                         
                     # Calculate tool position with standoff along the normal

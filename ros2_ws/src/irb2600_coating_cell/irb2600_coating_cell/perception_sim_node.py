@@ -101,36 +101,12 @@ class PerceptionSimNode(Node):
             
         self._im_server.applyChanges()
 
-    def _make_offset_arrows(self, r, g, b):
-        # Creates two arrows pointing away from the center, offset by 1.2m 
-        # so they stick out of wide/tall obstacles
-        a1 = Marker()
-        a1.type = Marker.ARROW
-        a1.scale.x = 0.5
-        a1.scale.y = 0.08
-        a1.scale.z = 0.08
-        a1.color.r = r; a1.color.g = g; a1.color.b = b; a1.color.a = 1.0
-        a1.pose.position.x = 1.2
-
-        a2 = Marker()
-        a2.type = Marker.ARROW
-        a2.scale.x = 0.5
-        a2.scale.y = 0.08
-        a2.scale.z = 0.08
-        a2.color.r = r; a2.color.g = g; a2.color.b = b; a2.color.a = 1.0
-        a2.pose.position.x = -1.2
-        # Rotate 180 deg around Z to point backward
-        a2.pose.orientation.z = 1.0
-        a2.pose.orientation.w = 0.0
-        
-        return [a1, a2]
-
     def _create_6dof_marker(self, name, frame_id, position, rpy):
         im = InteractiveMarker()
         im.header.frame_id = frame_id
         im.name = name
         im.description = f"Drag {name}"
-        im.scale = 1.0 # Increase general scale slightly
+        im.scale = 0.8 # Moderately scaled so standard arrows poke out
         
         im.pose.position.x = position[0]
         im.pose.position.y = position[1]
@@ -146,10 +122,9 @@ class PerceptionSimNode(Node):
         control.orientation.z = 0.0
         control.name = "move_x"
         control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
-        control.markers.extend(self._make_offset_arrows(1.0, 0.0, 0.0))
         im.controls.append(control)
 
-        # Move Z control (Blue) - orientation x=0, y=1 maps local X to global Z
+        # Move Z control (Blue)
         control = InteractiveMarkerControl()
         control.always_visible = True
         control.orientation.w = 1.0
@@ -158,10 +133,9 @@ class PerceptionSimNode(Node):
         control.orientation.z = 0.0
         control.name = "move_z"
         control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
-        control.markers.extend(self._make_offset_arrows(0.0, 0.0, 1.0))
         im.controls.append(control)
 
-        # Move Y control (Green) - orientation x=0, z=1 maps local X to global Y
+        # Move Y control (Green)
         control = InteractiveMarkerControl()
         control.always_visible = True
         control.orientation.w = 1.0
@@ -170,7 +144,6 @@ class PerceptionSimNode(Node):
         control.orientation.z = 1.0
         control.name = "move_y"
         control.interaction_mode = InteractiveMarkerControl.MOVE_AXIS
-        control.markers.extend(self._make_offset_arrows(0.0, 1.0, 0.0))
         im.controls.append(control)
 
         self._im_server.insert(im, feedback_callback=self._process_feedback)

@@ -76,6 +76,27 @@
     <limit lower="0.0" upper="4.5" effort="1000.0" velocity="1.0"/>
   </joint>
 
+  <!-- Load target panel visual mesh so it renders beautifully in RViz -->
+  <link name="target_panel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://irb2600_coating_cell/meshes/curved_panel.stl"/>
+      </geometry>
+      <material name="panel_grey">
+        <color rgba="0.8 0.8 0.8 1.0"/>
+      </material>
+    </visual>
+    <!-- No <collision> tag here! The collision is handled dynamically by scene_setup_node.py -->
+  </link>
+
+  <!-- Mount target panel visual to world (using the correct offset where the panel physically sits) -->
+  <joint name="world_to_target_panel" type="fixed">
+    <parent link="world"/>
+    <child link="target_panel"/>
+    <origin xyz="1.5 -1.2 1.5" rpy="0 0 0"/>
+  </joint>
+
   <!-- Load robot -->
   <xacro:abb_irb2600 prefix=""/>
   <xacro:abb_irb2600_ros2_control prefix=""/>

@@ -13,7 +13,7 @@
   ros__parameters:
     target_structure:
       frame_id: "world"
-      position: [1.2, -1.2, 1.5]
+      position: [1.0, -1.2, 1.5]
       orientation_rpy: [0.0, 0.0, 0.0]
       size: [0.05, 5.0, 2.0]
       local_normal: [-1.0, 0.0, 0.0]
@@ -28,7 +28,7 @@
     bottom_wall:
       type: "box"
       frame_id: "world"
-      position: [0.9, 0.0, 0.25]
+      position: [1.0, 0.0, 0.25]
       orientation_rpy: [0.0, 0.0, 0.0]
       size: [0.1, 2.0, 0.5]
 
@@ -36,7 +36,7 @@
     top_wall:
       type: "box"
       frame_id: "world"
-      position: [0.9, 0.0, 1.9]
+      position: [1.0, 0.0, 1.9]
       orientation_rpy: [0.0, 0.0, 0.0]
       size: [0.1, 2.0, 0.8]
 
@@ -44,7 +44,7 @@
     left_pillar:
       type: "box"
       frame_id: "world"
-      position: [0.9, 0.7, 1.15]
+      position: [1.0, 0.7, 1.15]
       orientation_rpy: [0.0, 0.0, 0.0]
       size: [0.1, 0.6, 0.9]
 
@@ -52,7 +52,7 @@
     right_pillar:
       type: "box"
       frame_id: "world"
-      position: [0.9, -0.7, 1.15]
+      position: [1.0, -0.7, 1.15]
       orientation_rpy: [0.0, 0.0, 0.0]
       size: [0.1, 0.6, 0.9]
 

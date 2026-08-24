@@ -104,6 +104,7 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         direction = 1
         
         while current_z >= z_min:
+            current_row = []
             y_points = self._frange(y_min, y_max, step_y) if direction == 1 else self._frange(y_max, y_min, -step_y)
             
             for current_y in y_points:
@@ -140,8 +141,11 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                     # Tool approaches AGAINST the normal
                     approach = [-float(normal[0]), -float(normal[1]), -float(normal[2])]
                     pose.orientation = quaternion_with_z_axis(approach)
-                    path.append(pose)
+                    current_row.append(pose)
                     
+            if current_row:
+                path.append(current_row)
+                
             current_z -= step_z
             direction *= -1
             
@@ -171,10 +175,10 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         d_standoff = p("d_standoff").value
         
         self.get_logger().info(f"Generating 3D Coverage Path for mesh at {pos}")
-        waypoints = self._generate_mesh_coverage_path(mesh_file, pos, d_standoff)
-        self.get_logger().info(f"Generated {len(waypoints)} dynamic 3D painting waypoints.")
+        rows = self._generate_mesh_coverage_path(mesh_file, pos, d_standoff)
+        self.get_logger().info(f"Generated {len(rows)} rows for dynamic 3D painting.")
         
-        if not waypoints:
+        if not rows:
             return False
             
         for pass_idx in range(num_passes):
@@ -183,53 +187,98 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                 
             self.get_logger().info(f"--- Starting pass {pass_idx+1}/{num_passes} ---")
             
-            # 1. Point-to-Point move to the first waypoint
-            self.get_logger().info("Moving to start position...")
-            self._set_spray(False)
-            goal = self._build_move_goal(waypoints[0], frame_id)
-            result = self._send_goal_and_wait(self._move_group_client, goal)
-            if result is None or result.result.error_code.val != 1:
-                self.get_logger().error("Failed to reach start position.")
-                return False
+            for row_idx, row in enumerate(rows):
+                if not rclpy.ok() or self._stop_requested():
+                    break
                 
-            # 2. Cartesian path for the remaining waypoints
-            self.get_logger().info("Computing smooth Cartesian path...")
-            req = GetCartesianPath.Request()
-            req.header.frame_id = frame_id
-            req.group_name = self.get_parameter("group_name").value
-            req.link_name = self.get_parameter("tcp_link").value
-            req.waypoints = waypoints[1:]
-            req.max_step = 0.05
-            req.jump_threshold = 0.0
-            req.avoid_collisions = True
-            
-            if not self._cartesian_client.wait_for_service(timeout_sec=2.0):
-                self.get_logger().error("Cartesian service not available!")
-                return False
-                
-            future = self._cartesian_client.call_async(req)
-            rclpy.spin_until_future_complete(self, future)
-            res = future.result()
-            
-            if res.fraction > 0.0:
-                self.get_logger().info(f"Cartesian path computed (fraction: {res.fraction:.2f}). Executing...")
-                exec_goal = ExecuteTrajectory.Goal()
-                exec_goal.trajectory = res.solution
-                
-                self._set_spray(True)
-                self._execute_client.wait_for_server()
-                exec_result = self._send_goal_and_wait(self._execute_client, exec_goal)
-                
-                if exec_result is None:
-                    self.get_logger().error("Execution was rejected or cancelled.")
-                    self._set_spray(False)
-                    return False
-                    
+                self.get_logger().info(f"Row {row_idx + 1}/{len(rows)}: Moving to start position...")
                 self._set_spray(False)
-            else:
-                self.get_logger().error(f"Failed to compute Cartesian path. Error code: {res.error_code.val}")
-                return False
                 
+                waypoints_to_execute = list(row)
+                
+                while waypoints_to_execute and rclpy.ok() and not self._stop_requested():
+                    # Move to the first waypoint of this chunk
+                    goal = self._build_move_goal(waypoints_to_execute[0], frame_id)
+                    result = self._send_goal_and_wait(self._move_group_client, goal)
+                    if result is None or result.result.error_code.val != 1:
+                        self.get_logger().error(f"Failed to reach start of chunk in Row {row_idx + 1}.")
+                        return False
+                        
+                    if len(waypoints_to_execute) == 1:
+                        break # Only 1 point left, already reached it.
+                        
+                    # Compute Cartesian path for the chunk
+                    self.get_logger().info("Computing smooth Cartesian path...")
+                    req = GetCartesianPath.Request()
+                    req.header.frame_id = frame_id
+                    req.group_name = self.get_parameter("group_name").value
+                    req.link_name = self.get_parameter("tcp_link").value
+                    req.waypoints = waypoints_to_execute[1:]
+                    req.max_step = 0.05
+                    req.jump_threshold = 0.0
+                    req.avoid_collisions = True
+                    
+                    if not self._cartesian_client.wait_for_service(timeout_sec=2.0):
+                        self.get_logger().error("Cartesian service not available!")
+                        return False
+                        
+                    future = self._cartesian_client.call_async(req)
+                    rclpy.spin_until_future_complete(self, future)
+                    res = future.result()
+                    
+                    if res.fraction > 0.0:
+                        # Back off a bit if we hit an obstacle
+                        if res.fraction < 0.99:
+                            num_points = len(res.solution.joint_trajectory.points)
+                            safe_len = max(1, num_points - 3)
+                            res.solution.joint_trajectory.points = res.solution.joint_trajectory.points[:safe_len]
+                        
+                        self.get_logger().info(f"Cartesian path computed (fraction: {res.fraction:.2f}). Executing...")
+                        exec_goal = ExecuteTrajectory.Goal()
+                        exec_goal.trajectory = res.solution
+                        
+                        self._set_spray(True)
+                        self._execute_client.wait_for_server()
+                        exec_result = self._send_goal_and_wait(self._execute_client, exec_goal)
+                        
+                        if exec_result is None:
+                            self.get_logger().error("Execution was rejected or cancelled.")
+                            self._set_spray(False)
+                            return False
+                            
+                        self._set_spray(False)
+                    else:
+                        self.get_logger().error(f"Failed to compute Cartesian path. Error code: {res.error_code.val}")
+                        return False
+                        
+                    if res.fraction >= 0.99:
+                        break # Finished this row chunk successfully
+                    else:
+                        # Obstacle hit! Calculate where we stopped.
+                        hit_idx = int(res.fraction * (len(waypoints_to_execute) - 1))
+                        self.get_logger().warn(f"Row {row_idx + 1} blocked at {res.fraction:.0%}. Attempting bypass...")
+                        
+                        # Find a safe jump index. Try skipping 4, 7, 10 waypoints ahead.
+                        bypass_success = False
+                        for skip in [4, 7, 10]:
+                            jump_idx = hit_idx + skip
+                            if jump_idx >= len(waypoints_to_execute):
+                                jump_idx = len(waypoints_to_execute) - 1
+                                
+                            self.get_logger().info(f"Row {row_idx + 1}: trying bypass jump to waypoint {jump_idx}/{len(waypoints_to_execute)-1}...")
+                            jump_goal = self._build_move_goal(waypoints_to_execute[jump_idx], frame_id)
+                            jump_res = self._send_goal_and_wait(self._move_group_client, jump_goal)
+                            
+                            if jump_res is not None and jump_res.result.error_code.val == 1:
+                                self.get_logger().info(f"Bypass successful! Resuming paint from waypoint {jump_idx}.")
+                                waypoints_to_execute = waypoints_to_execute[jump_idx:]
+                                bypass_success = True
+                                break
+                        
+                        if not bypass_success:
+                            self.get_logger().error(f"Row {row_idx + 1}: Could not find a safe bypass. Aborting pass.")
+                            return False
+                            
         self.get_logger().info("Coverage Path Execution Completed.")
         return True
 

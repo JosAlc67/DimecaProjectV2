@@ -168,9 +168,18 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         self._clear_stop()
         p = self.get_parameter
         
-        # Get target from parameters
+        # Get target from parameters or dynamic topic
         frame_id = p("target_structure.frame_id").value
-        pos = p("target_structure.position").value
+        if self._latest_target_pose is not None:
+            pos = [
+                self._latest_target_pose.pose.position.x,
+                self._latest_target_pose.pose.position.y,
+                self._latest_target_pose.pose.position.z
+            ]
+            self.get_logger().info("Using dynamic structure pose from perception sensor.")
+        else:
+            pos = p("target_structure.position").value
+            self.get_logger().warn("No structure pose received, using fallback parameter.")
         mesh_file = p("target_structure.mesh_file").value
         d_standoff = p("d_standoff").value
         

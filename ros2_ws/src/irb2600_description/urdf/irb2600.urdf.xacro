@@ -20,9 +20,10 @@
       <material name="pedestal_coral"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <!-- Centered around the origin of the track link. Length is 8.6m along Z axis -->
+      <origin xyz="0 0.15 4.3" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/Riel.stl" scale="0.001 0.001 0.001"/>
+        <box size="1.0 0.5 8.6"/>
       </geometry>
     </collision>
     <inertial>
@@ -41,9 +42,9 @@
       <material name="pedestal_coral"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/PlataformaRiel.STL" scale="0.001 0.001 0.001"/>
+        <box size="0.9 0.9 0.2"/>
       </geometry>
     </collision>
     <inertial>
@@ -73,32 +74,6 @@
     <axis xyz="0 0 1"/>
     <!-- The physical track limits. Since we rotated it, +Z moves along world -Y -->
     <limit lower="0.0" upper="4.5" effort="1000.0" velocity="1.0"/>
-  </joint>
-
-  <!-- Load target panel mesh -->
-  <link name="target_panel">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/curved_panel.stl"/>
-      </geometry>
-      <material name="panel_grey">
-        <color rgba="0.8 0.8 0.8 1.0"/>
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/curved_panel.stl"/>
-      </geometry>
-    </collision>
-  </link>
-
-  <!-- Mount target panel to world at the center of the track reach, moved closer to X=0.0 to prevent reach limit errors -->
-  <joint name="world_to_target_panel" type="fixed">
-    <parent link="world"/>
-    <child link="target_panel"/>
-    <origin xyz="0.0 -1.2 1.5" rpy="0 0 0"/>
   </joint>
 
   <!-- Load robot -->

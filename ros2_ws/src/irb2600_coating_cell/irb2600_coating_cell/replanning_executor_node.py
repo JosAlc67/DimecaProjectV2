@@ -44,7 +44,7 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         self.declare_parameter("replanning_time_s", 5.0)
         self.declare_parameter("replanning_attempts", 10)
         self.declare_parameter("raster_step_z", 0.2) # Distance between horizontal sweeps
-        self.declare_parameter("raster_step_y", 0.5) # Resolution along the sweep
+        self.declare_parameter("raster_step_y", 0.1) # Resolution along the sweep (finer to hug obstacles)
 
         self._latest_target_pose = None
         qos = QoSProfile(depth=10, history=HistoryPolicy.KEEP_LAST)

@@ -7,7 +7,7 @@ El sistema es capaz de generar trayectorias de cobertura dinámicas adaptadas a 
 ## Características Principales
 
 *   **Modelo Cinemático Completo (URDF/Xacro):** Integración de un riel base (track) de 4.5 metros, la plataforma móvil, el robot ABB IRB 2600 y una herramienta de boquilla de pintura (TCP). Todo en un sistema de 7 grados de libertad (DOF).
-*   **MoveIt 2 y Evasión de Colisiones Avanzada:** Entorno de planificación configurado con SRDF y objetos dinámicos inyectados. Incluye la simulación física del chorro de pintura (volumen de colisión de 14 cm) para garantizar que el robot esquive cualquier obstáculo que bloquee el flujo de pintura, no solo su estructura metálica.
+*   **MoveIt 2 y Evasión de Colisiones Avanzada:** Entorno de planificación configurado con SRDF y objetos dinámicos inyectados. El sistema planifica dinámicamente rutas para asegurar que la estructura física del robot esquive los obstáculos en tiempo real.
 *   **Planificación Dinámica 3D (Coverage Path Planning):** Generación automática de waypoints mediante raycasting usando la geometría del panel objetivo (STL). Mantiene un *standoff* (distancia focal) constante de 15 cm, estrictamente perpendicular a la superficie curva.
 *   **Seguimiento Dinámico de Entorno:** El planificador consume la pose en tiempo real del lienzo publicada por el nodo de percepción, asegurando una aplicación de pintura en el lugar exacto sin depender de coordenadas rígidas.
 *   **Ejecución Cartesiana Suave:** Ejecución interpolada linealmente en el espacio 3D para evitar reconfiguraciones drásticas de las articulaciones del brazo, asegurando un movimiento de pintura realista y fluido.

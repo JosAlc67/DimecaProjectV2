@@ -65,13 +65,6 @@
         <box size="0.01 0.01 0.01"/>
       </geometry>
     </visual>
-    <!-- 14cm collision cylinder representing the paint spray. This forces MoveIt to dodge obstacles that block the spray path, rather than just obstacles that hit the physical arm. -->
-    <collision>
-      <origin xyz="0 0 0.07" rpy="0 0 0"/>
-      <geometry>
-        <cylinder radius="0.05" length="0.14"/>
-      </geometry>
-    </collision>
   </link>
 
   <joint name="tool0_to_nozzle_tip" type="fixed">

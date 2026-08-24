@@ -36,7 +36,7 @@ import rclpy
 from rclpy.parameter import Parameter
 
 from irb2600_coating_cell.go_home_node import GoHomeNode
-from irb2600_coating_cell.replanning_executor_node import PickAndPlaceExecutorNode
+from irb2600_coating_cell.replanning_executor_node import ReplanningExecutorNode
 
 
 class ControlPanelApp:
@@ -83,7 +83,7 @@ class ControlPanelApp:
 
     def _on_start_route(self):
         self._run_in_background(
-            "Running route...", self._replanning_node, self._replanning_node.run_to_target
+            "Running route...", self._replanning_node, self._replanning_node.run_coverage
         )
 
     def _on_stop(self):
@@ -139,7 +139,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     go_home_node = GoHomeNode()
-    replanning_node = PickAndPlaceExecutorNode(
+    replanning_node = ReplanningExecutorNode(
         parameter_overrides=[Parameter("execute", Parameter.Type.BOOL, True)]
     )
 

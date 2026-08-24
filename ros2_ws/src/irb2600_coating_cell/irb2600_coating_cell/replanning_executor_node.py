@@ -191,6 +191,7 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         req = GetCartesianPath.Request()
         req.header.frame_id = frame_id
         req.group_name = self.get_parameter("group_name").value
+        req.link_name = self.get_parameter("tcp_link").value
         req.waypoints = waypoints[1:]
         req.max_step = 0.05
         req.jump_threshold = 0.0

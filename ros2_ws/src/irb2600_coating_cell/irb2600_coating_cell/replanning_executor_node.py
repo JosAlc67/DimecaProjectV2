@@ -269,9 +269,9 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                         hit_idx = int(res.fraction * (len(waypoints_to_execute) - 1))
                         self.get_logger().warn(f"Row {row_idx + 1} blocked at {res.fraction:.0%}. Attempting bypass...")
                         
-                        # Find a safe jump index. Try skipping 4, 7, 10 waypoints ahead.
+                        # Find a safe jump index. Try skipping 4, 7, 10, 15, 20 waypoints ahead.
                         bypass_success = False
-                        for skip in [4, 7, 10]:
+                        for skip in [4, 7, 10, 15, 20]:
                             jump_idx = hit_idx + skip
                             if jump_idx >= len(waypoints_to_execute):
                                 jump_idx = len(waypoints_to_execute) - 1

@@ -155,11 +155,21 @@ def main(args=None):
         parameter_overrides=[Parameter("execute", Parameter.Type.BOOL, True)]
     )
 
+    from rclpy.executors import MultiThreadedExecutor
+    executor = MultiThreadedExecutor()
+    executor.add_node(go_home_node)
+    executor.add_node(replanning_node)
+    
+    executor_thread = threading.Thread(target=executor.spin, daemon=True)
+    executor_thread.start()
+
     root = tk.Tk()
     ControlPanelApp(root, go_home_node, replanning_node)
     try:
         root.mainloop()
     finally:
+        executor.shutdown()
+        executor_thread.join(timeout=1.0)
         go_home_node.destroy_node()
         replanning_node.destroy_node()
         rclpy.shutdown()

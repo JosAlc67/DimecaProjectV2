@@ -264,10 +264,10 @@ class SceneSetupNode(Node):
         objects = []
         
         target_frame, target_pos, target_quat, target_size, target_mesh = self._target_pose()
-        if target_mesh:
-            objects.append(
-                self._make_mesh_object("target_structure", target_frame, target_pos, target_quat, target_mesh)
-            )
+        # We explicitly DO NOT add the target_structure to the MoveIt collision scene.
+        # This prevents RRT from getting trapped between the canvas and the track during bypass jumps,
+        # while allowing us to keep the canvas at X=0.5m where KDL Cartesian kinematics work perfectly.
+        pass
         
         for name in self._obstacle_names:
             frame_id, position, orientation, size, obstacle_type = self._obstacle_pose(name)

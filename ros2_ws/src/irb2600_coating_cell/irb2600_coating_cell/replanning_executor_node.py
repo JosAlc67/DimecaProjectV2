@@ -9,7 +9,7 @@ import rclpy
 from geometry_msgs.msg import Pose, PoseStamped
 from moveit_msgs.action import MoveGroup, ExecuteTrajectory
 from moveit_msgs.srv import GetCartesianPath
-from moveit_msgs.msg import Constraints, PositionConstraint, OrientationConstraint, BoundingVolume
+from moveit_msgs.msg import Constraints, PositionConstraint, OrientationConstraint, BoundingVolume, JointConstraint
 from shape_msgs.msg import SolidPrimitive
 from rclpy.action import ActionClient
 from rclpy.node import Node

@@ -11,7 +11,7 @@ Visualization Manager:
       Name: PerceptionMarkers
       Topic:
         Value: /perception_markers/update
-  - Class: rviz_default_plugins/Grid
+    - Class: rviz_default_plugins/Grid
       Name: Grid
       Enabled: true
       Plane Cell Count: 10

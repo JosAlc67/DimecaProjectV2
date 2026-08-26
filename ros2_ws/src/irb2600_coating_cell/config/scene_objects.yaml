@@ -1,73 +1,42 @@
-# Shared source of truth for the target structure (aerospace panel, Table VIII)
-# and the temporary obstacles (Table VIII / Table XVII Cases 2-4: "temporary
-# scaffolding, tools, wiring, auxiliary equipment", Sec. I), loaded by both
-# scene_setup_node (planning-scene collision objects) and perception_sim_node
-# (simulated structure_pose / obstacles/*/pose / surface_normal topics), so
-# the two views of the scene never drift apart.
-#
-# These are first-pass placement values, not measured/validated against the
-# real IRB 2600 reach envelope (Table VII: up to 1.85 m). Once this is
-# launched on a machine with ROS 2 + RViz, check that the panel and the
-# space around it are actually reachable and adjust here if not.
 /**:
   ros__parameters:
-    target_structure:
-      frame_id: "world"
-      position: [1.0, -1.2, 1.5]
-      orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.05, 5.0, 2.0]
-      local_normal: [-1.0, 0.0, 0.0]
-      mesh_file: "package://irb2600_coating_cell/meshes/curved_panel.stl"
-
-    obstacles: ["bottom_wall", "top_wall", "left_pillar", "right_pillar", "back_pole"]
-
-    # A complex obstacle course forming a 'window' at x=1.0
-    # The robot must thread its arm through a small gap to reach the target.
-
-    # Bottom wall: forces the arm to stay high
-    bottom_wall:
-      type: "box"
-      frame_id: "world"
-      position: [2.0, 0.0, 0.25]
-      orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.1, 2.0, 0.5]
-
-    # Top wall: forces the arm to stay low
-    top_wall:
-      type: "box"
-      frame_id: "world"
-      position: [2.0, 0.0, 1.9]
-      orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.1, 2.0, 0.8]
-
-    # Left pillar: restricts movement to the right
-    left_pillar:
-      type: "box"
-      frame_id: "world"
-      position: [2.0, 0.7, 1.15]
-      orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.1, 0.6, 0.9]
-
-    # Right pillar: restricts movement to the left
-    right_pillar:
-      type: "box"
-      frame_id: "world"
-      position: [2.0, -0.7, 1.15]
-      orientation_rpy: [0.0, 0.0, 0.0]
-      size: [0.1, 0.6, 0.9]
-
-    # An extra pole near the target to make the final approach tricky
     back_pole:
-      type: "cylinder"
-      frame_id: "world"
-      position: [2.0, 0.2, 0.9]
+      frame_id: world
       orientation_rpy: [0.0, 0.0, 0.0]
+      position: [2.0, 0.2, 0.9]
       size: [1.8, 0.05, 0.0]
-
-    # Table IX: minimum obstacle distance dsafe >= 0.05 m. Used by
-    # perception_sim_node's workspace_clear heuristic together with an extra
-    # margin for the robot/tool footprint (not physically simulated, just a
-    # coarse proxy since real point-cloud processing is out of scope, Sec.
-    # III-B).
+      type: cylinder
+    bottom_wall:
+      frame_id: world
+      orientation_rpy: [0.0, 0.0, 0.0]
+      position: [2.0, 0.0, 0.25]
+      size: [0.1, 2.0, 0.5]
+      type: box
     d_safe: 0.05
+    left_pillar:
+      frame_id: world
+      orientation_rpy: [0.0, 0.0, 0.0]
+      position: [2.0, 0.7, 1.15]
+      size: [0.1, 0.6, 0.9]
+      type: box
+    obstacles: [bottom_wall, top_wall, left_pillar, right_pillar, back_pole]
+    right_pillar:
+      frame_id: world
+      orientation_rpy: [0.0, 0.0, 0.0]
+      position: [2.0, -0.7, 1.15]
+      size: [0.1, 0.6, 0.9]
+      type: box
+    target_structure:
+      frame_id: world
+      local_normal: [-1.0, 0.0, 0.0]
+      mesh_file: package://irb2600_coating_cell/meshes/curved_panel.stl
+      orientation_rpy: [0.0, 0.0, 0.0]
+      position: [0.75, -1.2, 1.5]
+      size: [0.05, 5.0, 2.0]
+    top_wall:
+      frame_id: world
+      orientation_rpy: [0.0, 0.0, 0.0]
+      position: [2.0, 0.0, 1.9]
+      size: [0.1, 2.0, 0.8]
+      type: box
     workspace_clear_margin: 0.15

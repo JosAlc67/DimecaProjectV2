@@ -164,7 +164,7 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                 val += step
         return points
 
-    def run_coverage(self, num_passes=1):
+    def run_coverage(self, num_passes=1, resume=False):
         self._clear_stop()
         p = self.get_parameter
         
@@ -190,22 +190,39 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         if not rows:
             return False
             
-        for pass_idx in range(num_passes):
+        start_pass = 0
+        start_row = 0
+        waypoints_to_execute = None
+        
+        if resume and self._resume_state is not None:
+            start_pass, start_row, waypoints_to_execute = self._resume_state
+            self.get_logger().info(f"Resuming from pass {start_pass+1}, row {start_row+1}...")
+        else:
+            self._resume_state = None
+            
+        for pass_idx in range(start_pass, num_passes):
             if not rclpy.ok() or self._stop_requested():
                 break
                 
             self.get_logger().info(f"--- Starting pass {pass_idx+1}/{num_passes} ---")
             
-            for row_idx, row in enumerate(rows):
+            row_start = start_row if pass_idx == start_pass else 0
+            for row_idx in range(row_start, len(rows)):
                 if not rclpy.ok() or self._stop_requested():
                     break
                 
-                self.get_logger().info(f"Row {row_idx + 1}/{len(rows)}: Moving to start position...")
+                if pass_idx == start_pass and row_idx == start_row and waypoints_to_execute is not None:
+                    self.get_logger().info(f"Row {row_idx + 1}/{len(rows)}: Resuming chunk...")
+                else:
+                    self.get_logger().info(f"Row {row_idx + 1}/{len(rows)}: Moving to start position...")
+                    waypoints_to_execute = list(rows[row_idx])
+                    
                 self._set_spray(False)
                 
-                waypoints_to_execute = list(row)
-                
-                while waypoints_to_execute and rclpy.ok() and not self._stop_requested():
+                while waypoints_to_execute and rclpy.ok():
+                    if self._stop_requested():
+                        self._resume_state = (pass_idx, row_idx, waypoints_to_execute)
+                        break
                     # Move to the first waypoint of this chunk
                     goal = self._build_move_goal(waypoints_to_execute[0], frame_id)
                     result = self._send_goal_and_wait(self._move_group_client, goal)
@@ -288,6 +305,7 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                         
                         if not bypass_success:
                             self.get_logger().error(f"Row {row_idx + 1}: Could not find a safe bypass. Aborting pass.")
+                            self._resume_state = (pass_idx, row_idx, waypoints_to_execute)
                             return False
                             
         self.get_logger().info("Coverage Path Execution Completed.")

@@ -75,6 +75,11 @@ class ControlPanelApp:
         )
         self._route_button.pack(side="left", padx=5, expand=True, fill="x")
 
+        self._resume_button = ttk.Button(
+            button_frame, text="Resume", command=self._on_resume_route
+        )
+        self._resume_button.pack(side="left", padx=5, expand=True, fill="x")
+
         self._stop_button = ttk.Button(
             button_frame, text="Stop", command=self._on_stop, state="disabled"
         )
@@ -94,7 +99,15 @@ class ControlPanelApp:
         self._run_in_background(
             f"Running route ({passes} passes)...", 
             self._replanning_node, 
-            lambda: self._replanning_node.run_coverage(num_passes=passes)
+            lambda: self._replanning_node.run_coverage(num_passes=passes, resume=False)
+        )
+        
+    def _on_resume_route(self):
+        passes = self._passes_var.get()
+        self._run_in_background(
+            f"Resuming route ({passes} passes)...", 
+            self._replanning_node, 
+            lambda: self._replanning_node.run_coverage(num_passes=passes, resume=True)
         )
 
     def _on_stop(self):
@@ -128,6 +141,7 @@ class ControlPanelApp:
     def _set_buttons_enabled(self, running):
         self._home_button.configure(state="disabled" if running else "normal")
         self._route_button.configure(state="disabled" if running else "normal")
+        self._resume_button.configure(state="disabled" if running else "normal")
         self._stop_button.configure(state="normal" if running else "disabled")
         self._passes_spin.configure(state="disabled" if running else "normal")
 

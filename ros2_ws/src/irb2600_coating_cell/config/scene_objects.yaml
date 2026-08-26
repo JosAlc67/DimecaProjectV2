@@ -31,7 +31,7 @@
       local_normal: [-1.0, 0.0, 0.0]
       mesh_file: package://irb2600_coating_cell/meshes/curved_panel.stl
       orientation_rpy: [0.0, 0.0, 0.0]
-      position: [0.9, -1.2, 1.5]
+      position: [0.5, -1.2, 1.5]
       size: [0.05, 5.0, 2.0]
     top_wall:
       frame_id: world

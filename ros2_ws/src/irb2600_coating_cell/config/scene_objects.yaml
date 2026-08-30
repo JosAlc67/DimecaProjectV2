@@ -1,5 +1,22 @@
 /**:
   ros__parameters:
+    # Provisional process values. Keep configurable until the final CAD and
+    # process specification confirm the waypoint count, speed and standoff.
+    trajectory:
+      d_standoff: 0.15
+      max_cartesian_step: 0.05
+      raster_step_y: 0.10
+      raster_step_z: 0.20
+      requested_waypoints: 0
+      target_speed_mps: 0.0
+      velocity_scaling_factor: 0.20
+    safety:
+      require_workspace_clear: true
+      stable_clear_time_s: 0.50
+      workspace_wait_timeout_s: 30.0
+    metrics:
+      enabled: true
+      output_directory: ""
     back_pole:
       frame_id: world
       orientation_rpy: [0.0, 0.0, 0.0]

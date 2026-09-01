@@ -14,14 +14,21 @@ import math
 import struct
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped, Vector3Stamped
-from std_msgs.msg import Bool
+from geometry_msgs.msg import PoseStamped, TransformStamped, Vector3Stamped
+from std_msgs.msg import Bool, Float32
 from sensor_msgs.msg import PointCloud2, PointField
+from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
 from irb2600_coating_cell.geometry_utils import (
     point_segment_distance_2d,
     quaternion_from_rpy,
     rotate_vector_by_quaternion,
+    transform_point,
+)
+from irb2600_coating_cell.resource_utils import resolve_resource_uri
+from irb2600_coating_cell.sensor_geometry import (
+    ray_plane_distance,
+    visible_points_in_camera_frame,
 )
 from interactive_markers.interactive_marker_server import InteractiveMarkerServer
 from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl, Marker
@@ -58,6 +65,10 @@ class PerceptionSimNode(Node):
         self.declare_parameter("target_structure.position", [1.0, 0.0, 1.0])
         self.declare_parameter("target_structure.orientation_rpy", [0.0, 0.0, 0.0])
         self.declare_parameter("target_structure.local_normal", [-1.0, 0.0, 0.0])
+        self.declare_parameter(
+            "target_structure.mesh_file",
+            "package://irb2600_coating_cell/meshes/curved_panel.stl",
+        )
 
         self.declare_parameter("obstacles", ["temporary_obstacle"])
         self._obstacle_names = list(self.get_parameter("obstacles").value)
@@ -74,6 +85,32 @@ class PerceptionSimNode(Node):
         self.declare_parameter("workspace_clear_margin", 0.15)
         self.declare_parameter("publish_rate_hz", 5.0)
 
+        # MotionCam-3D L: range and FOV derive from its supplied datasheet.
+        # The nominal FOV is calculated from the 1027 x 836 mm sweet-spot
+        # area at 1252 mm.  Installation transforms remain survey inputs.
+        self.declare_parameter("motioncam.enabled", True)
+        self.declare_parameter("motioncam.parent_frame", "world")
+        self.declare_parameter("motioncam.optical_frame", "motioncam_optical_frame")
+        self.declare_parameter("motioncam.position", [-0.65, -1.2, 1.5])
+        self.declare_parameter("motioncam.orientation_rpy", [0.0, 1.57079632679, 0.0])
+        self.declare_parameter("motioncam.near_range_m", 0.778)
+        self.declare_parameter("motioncam.far_range_m", 3.034)
+        self.declare_parameter("motioncam.horizontal_fov_rad", 0.779)
+        self.declare_parameter("motioncam.vertical_fov_rad", 0.644)
+        self.declare_parameter("motioncam.max_points", 2000)
+
+        # C3-W455P1 with T60 optical probe.  It is disabled until the
+        # measured mounting transform is supplied, avoiding false validation
+        # claims from an invented sensor pose.
+        self.declare_parameter("c3.enabled", False)
+        self.declare_parameter("c3.parent_frame", "world")
+        self.declare_parameter("c3.optical_frame", "c3_t60_optical_frame")
+        self.declare_parameter("c3.position", [0.0, 0.0, 0.0])
+        self.declare_parameter("c3.orientation_rpy", [0.0, 0.0, 0.0])
+        self.declare_parameter("c3.min_distance_m", 0.015)
+        self.declare_parameter("c3.max_distance_m", 0.150)
+        self.declare_parameter("c3.simulated_thickness_um", 100.0)
+
         self._structure_pub = self.create_publisher(PoseStamped, "structure_pose", 10)
         self._normal_pub = self.create_publisher(Vector3Stamped, "surface_normal", 10)
         self._obstacle_pubs = {
@@ -84,13 +121,60 @@ class PerceptionSimNode(Node):
         self._pointcloud_pub = self.create_publisher(
             PointCloud2, "/camera/depth/color/points", 10
         )
+        self._c3_distance_pub = self.create_publisher(Float32, "c3/working_distance_m", 10)
+        self._c3_thickness_pub = self.create_publisher(Float32, "c3/thickness_um", 10)
+        self._c3_valid_pub = self.create_publisher(Bool, "c3/measurement_valid", 10)
 
         self._dynamic_poses = {}
+        self._target_mesh_points = None
+        self._static_tf = StaticTransformBroadcaster(self)
+        self._publish_sensor_transforms()
         self._im_server = InteractiveMarkerServer(self, "/perception_markers")
         self._init_interactive_markers()
 
         rate_hz = float(self.get_parameter("publish_rate_hz").value)
         self._timer = self.create_timer(1.0 / rate_hz, self._on_timer)
+
+    def _sensor_pose(self, prefix):
+        position = [float(value) for value in self.get_parameter(f"{prefix}.position").value]
+        orientation = quaternion_from_rpy(
+            *[float(value) for value in self.get_parameter(f"{prefix}.orientation_rpy").value]
+        )
+        return position, orientation
+
+    def _publish_sensor_transforms(self):
+        transforms = []
+        for prefix in ("motioncam", "c3"):
+            if not self.get_parameter(f"{prefix}.enabled").value:
+                continue
+            position, orientation = self._sensor_pose(prefix)
+            transform = TransformStamped()
+            transform.header.stamp = self.get_clock().now().to_msg()
+            transform.header.frame_id = self.get_parameter(f"{prefix}.parent_frame").value
+            transform.child_frame_id = self.get_parameter(f"{prefix}.optical_frame").value
+            transform.transform.translation.x = position[0]
+            transform.transform.translation.y = position[1]
+            transform.transform.translation.z = position[2]
+            transform.transform.rotation = orientation
+            transforms.append(transform)
+        if transforms:
+            self._static_tf.sendTransform(transforms)
+
+    def _target_surface_points(self, position, orientation):
+        """Load deterministic target-mesh samples and express them in world."""
+        if self._target_mesh_points is None:
+            try:
+                import trimesh
+
+                mesh_file = self.get_parameter("target_structure.mesh_file").value
+                mesh = trimesh.load_mesh(resolve_resource_uri(mesh_file), process=False)
+                maximum = int(self.get_parameter("motioncam.max_points").value)
+                stride = max(1, math.ceil(len(mesh.vertices) / max(maximum, 1)))
+                self._target_mesh_points = [tuple(vertex) for vertex in mesh.vertices[::stride]]
+            except Exception as exc:  # noqa: BLE001 - perception must keep publishing obstacles
+                self.get_logger().error(f"Could not load target mesh for MotionCam simulation: {exc}")
+                self._target_mesh_points = []
+        return [transform_point(point, position, orientation) for point in self._target_mesh_points]
 
     def _init_interactive_markers(self):
         # Create a marker for each obstacle
@@ -186,7 +270,7 @@ class PerceptionSimNode(Node):
         normal_msg.vector.x, normal_msg.vector.y, normal_msg.vector.z = nx, ny, nz
         self._normal_pub.publish(normal_msg)
 
-        all_points = []
+        all_points = self._target_surface_points(structure_pos, structure_quat)
         workspace_clear = True
 
         for name in self._obstacle_names:
@@ -228,11 +312,52 @@ class PerceptionSimNode(Node):
         clear_msg.data = workspace_clear
         self._clear_pub.publish(clear_msg)
 
-        # Publish PointCloud2 if points exist
-        if all_points:
+        # MotionCam only returns points inside its documented scanning volume.
+        if all_points and p("motioncam.enabled").value:
+            camera_position, camera_orientation = self._sensor_pose("motioncam")
+            camera_points = visible_points_in_camera_frame(
+                all_points,
+                camera_position,
+                camera_orientation,
+                p("motioncam.near_range_m").value,
+                p("motioncam.far_range_m").value,
+                p("motioncam.horizontal_fov_rad").value,
+                p("motioncam.vertical_fov_rad").value,
+            )
             header = structure_msg.header
-            pc2_msg = create_point_cloud_2(header, all_points)
+            header.frame_id = p("motioncam.optical_frame").value
+            pc2_msg = create_point_cloud_2(header, camera_points)
             self._pointcloud_pub.publish(pc2_msg)
+
+        self._publish_c3_measurement(structure_pos, structure_quat)
+
+    def _publish_c3_measurement(self, target_position, target_orientation):
+        valid_msg = Bool()
+        distance_msg = Float32()
+        thickness_msg = Float32()
+        valid_msg.data = False
+        distance_msg.data = float("nan")
+        thickness_msg.data = float("nan")
+
+        if self.get_parameter("c3.enabled").value:
+            c3_position, c3_orientation = self._sensor_pose("c3")
+            local_normal = self.get_parameter("target_structure.local_normal").value
+            normal_world = rotate_vector_by_quaternion(local_normal, target_orientation)
+            distance = ray_plane_distance(
+                c3_position, c3_orientation, target_position, normal_world
+            )
+            if distance is not None and (
+                self.get_parameter("c3.min_distance_m").value
+                <= distance
+                <= self.get_parameter("c3.max_distance_m").value
+            ):
+                valid_msg.data = True
+                distance_msg.data = float(distance)
+                thickness_msg.data = float(self.get_parameter("c3.simulated_thickness_um").value)
+
+        self._c3_valid_pub.publish(valid_msg)
+        self._c3_distance_pub.publish(distance_msg)
+        self._c3_thickness_pub.publish(thickness_msg)
 
     def _sample_box_surface_points(self, pos, quat, size):
         """Generates a grid of 3D surface points in world frame representing the box volume."""

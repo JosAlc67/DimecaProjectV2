@@ -66,6 +66,7 @@ import trimesh
 from irb2600_coating_cell.resource_utils import resolve_resource_uri
 
 _TARGET_COLOR = ColorRGBA(r=0.2, g=0.5, b=1.0, a=1.0)
+_ASSET_COLOR = ColorRGBA(r=0.15, g=0.75, b=0.95, a=0.85)
 
 # Cycled by obstacle index so an arbitrary-length obstacle list always gets
 # a distinct, readable color instead of everything defaulting to the same
@@ -89,6 +90,24 @@ class SceneSetupNode(Node):
         self.declare_parameter("target_structure.orientation_rpy", [0.0, 0.0, 0.0])
         self.declare_parameter("target_structure.size", [0.05, 5.0, 2.0])
         self.declare_parameter("target_structure.mesh_file", "")
+
+        # Static CAD-derived assets are intentionally separate from dynamic
+        # obstacles.  They can have a high-detail visual mesh and a distinct,
+        # simplified collision mesh.  This avoids putting presentation meshes
+        # (such as the 119k-triangle Cobra export) into MoveIt.
+        self.declare_parameter("cad_assets", [])
+        self._asset_names = [name for name in self.get_parameter("cad_assets").value if name]
+        for name in self._asset_names:
+            self.declare_parameter(f"{name}.frame_id", "world")
+            self.declare_parameter(f"{name}.position", [0.0, 0.0, 0.0])
+            self.declare_parameter(f"{name}.orientation_rpy", [0.0, 0.0, 0.0])
+            self.declare_parameter(f"{name}.collision_enabled", True)
+            self.declare_parameter(f"{name}.collision_mesh_file", "")
+            self.declare_parameter(f"{name}.fallback_type", "box")
+            self.declare_parameter(f"{name}.size", [0.1, 0.1, 0.1])
+            self.declare_parameter(f"{name}.visual_enabled", True)
+            self.declare_parameter(f"{name}.visual_mesh_file", "")
+            self.declare_parameter(f"{name}.cad_source", "")
 
         # Fallback single-obstacle name if the "obstacles" parameter isn't
         # provided by a params file (e.g. running this node standalone).
@@ -133,7 +152,7 @@ class SceneSetupNode(Node):
 
         self.get_logger().info(
             f"Waiting for /apply_planning_scene (provided by move_group)... "
-            f"obstacles={self._obstacle_names}"
+            f"obstacles={self._obstacle_names}, cad_assets={self._asset_names}"
         )
         if self._apply_scene_client.wait_for_service(timeout_sec=5.0):
             self._apply_scene()
@@ -187,11 +206,20 @@ class SceneSetupNode(Node):
 
     def _target_pose(self):
         p = self.get_parameter
-        frame_id = p("target_structure.frame_id").value
-        position = [float(v) for v in p("target_structure.position").value]
-        orientation = quaternion_from_rpy(
-            *[float(v) for v in p("target_structure.orientation_rpy").value]
-        )
+        if self._sensor_target_pose is not None:
+            frame_id = self._sensor_target_pose.header.frame_id or p("target_structure.frame_id").value
+            position = [
+                self._sensor_target_pose.pose.position.x,
+                self._sensor_target_pose.pose.position.y,
+                self._sensor_target_pose.pose.position.z,
+            ]
+            orientation = self._sensor_target_pose.pose.orientation
+        else:
+            frame_id = p("target_structure.frame_id").value
+            position = [float(v) for v in p("target_structure.position").value]
+            orientation = quaternion_from_rpy(
+                *[float(v) for v in p("target_structure.orientation_rpy").value]
+            )
         size = [float(v) for v in p("target_structure.size").value]
         mesh_file = p("target_structure.mesh_file").value
         return frame_id, position, orientation, size, mesh_file
@@ -216,6 +244,16 @@ class SceneSetupNode(Node):
             )
 
         return frame_id, position, orientation, size, obstacle_type
+
+    def _asset_pose(self, name):
+        p = self.get_parameter
+        return (
+            p(f"{name}.frame_id").value,
+            [float(value) for value in p(f"{name}.position").value],
+            quaternion_from_rpy(*[float(value) for value in p(f"{name}.orientation_rpy").value]),
+            [float(value) for value in p(f"{name}.size").value],
+            p(f"{name}.fallback_type").value,
+        )
 
     def _make_mesh_object(self, object_id, frame_id, position, orientation, mesh_file):
         obj = CollisionObject()
@@ -275,12 +313,28 @@ class SceneSetupNode(Node):
                     self._make_box_object(name, frame_id, position, orientation, size)
                 )
 
+        for name in self._asset_names:
+            if not self.get_parameter(f"{name}.collision_enabled").value:
+                continue
+            frame_id, position, orientation, size, fallback_type = self._asset_pose(name)
+            collision_mesh = self.get_parameter(f"{name}.collision_mesh_file").value
+            if collision_mesh:
+                objects.append(
+                    self._make_mesh_object(name, frame_id, position, orientation, collision_mesh)
+                )
+            elif fallback_type == "cylinder":
+                objects.append(self._make_cylinder_object(name, frame_id, position, orientation, size))
+            else:
+                objects.append(self._make_box_object(name, frame_id, position, orientation, size))
+
         return objects
 
     def _object_colors(self):
         colors = {"target_structure": _TARGET_COLOR}
         for i, name in enumerate(self._obstacle_names):
             colors[name] = _OBSTACLE_PALETTE[i % len(_OBSTACLE_PALETTE)]
+        for name in self._asset_names:
+            colors[name] = _ASSET_COLOR
         return colors
 
     def _make_marker(self, marker_id, object_id, frame_id, position, orientation, size, shape_type, color):
@@ -331,7 +385,23 @@ class SceneSetupNode(Node):
     def _build_markers(self):
         markers = []
         colors = self._object_colors()
-        marker_id = 0
+        target_frame, target_pos, target_quat, target_size, target_mesh = self._target_pose()
+        target_marker = self._make_marker(
+            0,
+            "target_structure",
+            target_frame,
+            target_pos,
+            target_quat,
+            target_size,
+            "box",
+            colors["target_structure"],
+        )
+        if target_mesh:
+            target_marker.type = Marker.MESH_RESOURCE
+            target_marker.mesh_resource = target_mesh
+            target_marker.mesh_use_embedded_materials = True
+            target_marker.scale.x = target_marker.scale.y = target_marker.scale.z = 1.0
+        markers.append(target_marker)
 
         for i, name in enumerate(self._obstacle_names):
             frame_id, position, orientation, size, obstacle_type = self._obstacle_pose(name)
@@ -340,6 +410,23 @@ class SceneSetupNode(Node):
                     i + 1, name, frame_id, position, orientation, size, obstacle_type, colors[name]
                 )
             )
+
+        marker_id = len(self._obstacle_names) + 1
+        for name in self._asset_names:
+            if not self.get_parameter(f"{name}.visual_enabled").value:
+                continue
+            frame_id, position, orientation, size, fallback_type = self._asset_pose(name)
+            mesh_resource = self.get_parameter(f"{name}.visual_mesh_file").value
+            marker = self._make_marker(
+                marker_id, name, frame_id, position, orientation, size, fallback_type, colors[name]
+            )
+            if mesh_resource:
+                marker.type = Marker.MESH_RESOURCE
+                marker.mesh_resource = mesh_resource
+                marker.mesh_use_embedded_materials = True
+                marker.scale.x = marker.scale.y = marker.scale.z = 1.0
+            markers.append(marker)
+            marker_id += 1
 
         return MarkerArray(markers=markers)
 
@@ -400,10 +487,19 @@ class SceneSetupNode(Node):
         first_reading = previous is None
         moved = True
         if not first_reading:
-            old = previous.position
-            moved = max(abs(n - o) for n, o in zip(new_position, (old.x, old.y, old.z))) > 0.01
+            old_pose = previous.pose
+            translation_changed = max(
+                abs(n - o) for n, o in zip(new_position, (old_pose.position.x, old_pose.position.y, old_pose.position.z))
+            ) > 0.01
+            orientation_dot = abs(
+                msg.pose.orientation.x * old_pose.orientation.x
+                + msg.pose.orientation.y * old_pose.orientation.y
+                + msg.pose.orientation.z * old_pose.orientation.z
+                + msg.pose.orientation.w * old_pose.orientation.w
+            )
+            moved = translation_changed or orientation_dot < 0.99996
 
-        self._sensor_target_pose = msg.pose
+        self._sensor_target_pose = msg
 
         if first_reading or moved:
             x, y, z = new_position
@@ -421,7 +517,16 @@ class SceneSetupNode(Node):
         moved = True
         if not first_reading:
             old = previous.position
-            moved = max(abs(n - o) for n, o in zip(new_position, (old.x, old.y, old.z))) > 0.01
+            translation_changed = max(
+                abs(n - o) for n, o in zip(new_position, (old.x, old.y, old.z))
+            ) > 0.01
+            orientation_dot = abs(
+                msg.pose.orientation.x * previous.orientation.x
+                + msg.pose.orientation.y * previous.orientation.y
+                + msg.pose.orientation.z * previous.orientation.z
+                + msg.pose.orientation.w * previous.orientation.w
+            )
+            moved = translation_changed or orientation_dot < 0.99996
 
         self._sensor_obstacle_poses[name] = msg.pose
 

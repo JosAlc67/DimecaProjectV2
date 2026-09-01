@@ -2,10 +2,10 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
   <!--
-    Simulated spraying-nozzle end effector (report Table V/VIII: "Spraying nozzle
-    (simulated)"). Geometry is reused from RAMEL-ESPOL/IRB2600-ABB
-    irb2600_description/urdf/ee_marker.xacro (the whiteboard-marker tool), which is
-    a reasonable placeholder standoff length until a real nozzle CAD is available.
+    Cobra spraying-nozzle end effector.  Its visual mesh comes from the
+    supplied Cobra CAD export.  The collision geometry is deliberately a
+    conservative box derived from that export's bounds, so MoveIt does not
+    need to process the 119k-triangle presentation mesh on every plan.
 
     Frames:
       tool0            - ROS-Industrial flange-facing frame (from irb2600_macro.xacro)
@@ -42,9 +42,12 @@
       <xacro:material_abb_orange/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <!-- CobraPaintTool STL bounds, converted from mm to m:
+           342.479 x 100.750 x 88.713.  Offset is its bounding-box center
+           in the source mesh frame. -->
+      <origin xyz="0.174107 0.056650 0.054678" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/CobraPaintTool.STL" scale="0.001 0.001 0.001"/>
+        <box size="0.342479 0.100750 0.088713"/>
       </geometry>
     </collision>
   </link>

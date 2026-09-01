@@ -16,6 +16,9 @@ from rclpy.node import Node
 from irb2600_coating_cell.stoppable import StoppableActionNode
 
 _ARM_JOINTS = ["track_prismatic_joint", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"]
+_HOME_JOINTS = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+# Deliberately modest, collision-checked pose for mock-hardware simulation.
+_DEMO_JOINTS = [0.30, -0.35, -0.55, 0.35, 0.0, 0.35, 0.0]
 
 
 class GoHomeNode(StoppableActionNode, Node):
@@ -35,12 +38,20 @@ class GoHomeNode(StoppableActionNode, Node):
         so callers other than main() (e.g. the Tkinter GUI's background
         thread) can reuse this node instance directly. Can be interrupted
         by request_stop() from another thread."""
+        return self._move_to_joint_target("home", _HOME_JOINTS)
+
+    def move_demo(self):
+        """Run a short visible, collision-checked movement in simulation."""
+        return self._move_to_joint_target("demo", _DEMO_JOINTS)
+
+    def _move_to_joint_target(self, target_name, joint_positions):
+        """Plan and execute one named joint target through MoveIt."""
         self._clear_stop()
         constraints = Constraints()
-        for joint_name in _ARM_JOINTS:
+        for joint_name, joint_position in zip(_ARM_JOINTS, joint_positions):
             jc = JointConstraint()
             jc.joint_name = joint_name
-            jc.position = 0.0
+            jc.position = float(joint_position)
             jc.tolerance_above = 0.01
             jc.tolerance_below = 0.01
             jc.weight = 1.0
@@ -67,14 +78,16 @@ class GoHomeNode(StoppableActionNode, Node):
         goal.planning_options.plan_only = False
         goal.planning_options.planning_scene_diff.is_diff = True
 
-        self.get_logger().info("Planning path to home (all joints = 0)...")
+        self.get_logger().info(f"Planning path to {target_name} joint target...")
         
         max_attempts = 5
         attempts = 0
         while rclpy.ok() and not self._stop_requested() and attempts < max_attempts:
             attempts += 1
             if attempts > 1:
-                self.get_logger().info(f"--- Attempt {attempts}/{max_attempts} to go home ---")
+                self.get_logger().info(
+                    f"--- Attempt {attempts}/{max_attempts} to reach {target_name} ---"
+                )
                 
             result_response = self._send_goal_and_wait(self._client, goal)
 
@@ -82,26 +95,27 @@ class GoHomeNode(StoppableActionNode, Node):
                 self.get_logger().error("move_action goal rejected.")
                 break
             elif self._succeeded(result_response):
-                self.get_logger().info("Home reached.")
-                return
+                self.get_logger().info(f"{target_name.capitalize()} target reached.")
+                return True
             elif self._cancelled(result_response):
-                self.get_logger().warn("Go Home cancelled (Stop).")
-                return
+                self.get_logger().warn(f"{target_name.capitalize()} motion cancelled (Stop).")
+                return False
             else:
                 error_code = result_response.result.error_code.val
                 if error_code in [-26, -27]:
                     # START_STATE_INVALID or GOAL_STATE_INVALID
                     self.get_logger().error(
-                        f"Failed to reach home (error_code={error_code}). "
-                        "Make sure obstacles are not colliding with the robot's current or home position!"
+                        f"Failed to reach {target_name} (error_code={error_code}). "
+                        "Make sure obstacles are not colliding with the robot's current or target position!"
                     )
                     break
                 else:
                     self.get_logger().warn(
-                        f"Failed to plan/execute path to home (error_code={error_code}). Retrying..."
+                    f"Failed to plan/execute path to {target_name} (error_code={error_code}). Retrying..."
                     )
                     
-        self.get_logger().error("Could not reach home after multiple attempts.")
+        self.get_logger().error(f"Could not reach {target_name} after multiple attempts.")
+        return False
 
 
 def main(args=None):

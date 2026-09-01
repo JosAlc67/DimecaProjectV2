@@ -17,23 +17,22 @@
     metrics:
       enabled: true
       output_directory: ""
-    # CAD asset registry.  `cad_source` is traceability metadata; ROS/MoveIt
-    # consumes only STL/DAE meshes declared in *_mesh_file.  The MotionCam
-    # STEP has not been exported to a ROS mesh yet, so its documented housing
-    # dimensions are used as a visual-only provisional volume.
-    cad_assets: [motioncam_3d_l]
-    motioncam_3d_l:
+    # CAD asset registry. `cad_source` is traceability metadata; ROS/MoveIt
+    # consumes only STL/DAE meshes declared in *_mesh_file. The camera-cover
+    # STL is already in metres, so it intentionally has no scale parameter.
+    cad_assets: [motioncam_carcasa]
+    motioncam_carcasa:
       frame_id: world
-      # Provisional survey pose: replace with the measured installation pose.
+      # Provisional survey pose: replace with the measured cover installation pose.
       position: [-0.65, -1.2, 1.5]
       orientation_rpy: [0.0, 1.57079632679, 0.0]
       collision_enabled: false
       collision_mesh_file: ""
       fallback_type: box
-      size: [0.628, 0.068, 0.086]
+      size: [0.092, 0.665, 0.088]
       visual_enabled: true
-      visual_mesh_file: ""
-      cad_source: "DISEÑO/Robot_IRB2600_20kg_16.5/MotionCam-3D-Color-L-(Blue)-bps-env-fov-cones.STEP"
+      visual_mesh_file: package://irb2600_coating_cell/meshes/cad/motioncam_housing.stl
+      cad_source: "design/Carcasa Cam-1.stl"
     motioncam:
       enabled: true
       parent_frame: world

@@ -1,6 +1,7 @@
-"""Simple Tkinter control panel with three buttons: "Go Home", "Start
-Route" and "Stop". Wraps GoHomeNode.go_home(), ReplanningExecutorNode.
-run_route() and their request_stop() so operating the cell doesn't require
+"""Tkinter control panel for the simulated coating cell.
+
+It is launched by ``coating_cell_bringup.launch.py`` by default and wraps
+the home, demonstration and coverage movements so operating the cell doesn't require
 typing CLI commands in a separate terminal each time.
 
 An RViz panel plugin was considered instead but ruled out: this workspace
@@ -49,10 +50,19 @@ class ControlPanelApp:
         self._busy = False
         self._active_node = None
 
-        root.title("IRB2600 Coating Cell - Control Panel")
+        root.title("DIMECA | Celda de recubrimiento IRB2600")
+        root.minsize(600, 220)
 
-        self._status_var = tk.StringVar(value="Ready.")
-        ttk.Label(root, textvariable=self._status_var, padding=10).pack(fill="x")
+        ttk.Label(
+            root,
+            text="SIMULACIÓN ROS 2 / MOVEIT",
+            font=("TkDefaultFont", 12, "bold"),
+            padding=(12, 12, 12, 4),
+        ).pack(fill="x")
+        self._status_var = tk.StringVar(
+            value="Simulación conectada. Ejecute primero Movimiento demo."
+        )
+        ttk.Label(root, textvariable=self._status_var, padding=(12, 4, 12, 10)).pack(fill="x")
 
         # Passes Configuration Frame
         config_frame = ttk.Frame(root, padding=10)
@@ -65,23 +75,28 @@ class ControlPanelApp:
         button_frame = ttk.Frame(root, padding=10)
         button_frame.pack(fill="x")
 
+        self._demo_button = ttk.Button(
+            button_frame, text="Movimiento demo", command=self._on_demo_move
+        )
+        self._demo_button.pack(side="left", padx=5, expand=True, fill="x")
+
         self._home_button = ttk.Button(
-            button_frame, text="Go Home", command=self._on_go_home
+            button_frame, text="Ir a inicio", command=self._on_go_home
         )
         self._home_button.pack(side="left", padx=5, expand=True, fill="x")
 
         self._route_button = ttk.Button(
-            button_frame, text="Start Route", command=self._on_start_route
+            button_frame, text="Iniciar ruta", command=self._on_start_route
         )
         self._route_button.pack(side="left", padx=5, expand=True, fill="x")
 
         self._resume_button = ttk.Button(
-            button_frame, text="Resume", command=self._on_resume_route
+            button_frame, text="Reanudar", command=self._on_resume_route
         )
         self._resume_button.pack(side="left", padx=5, expand=True, fill="x")
 
         self._stop_button = ttk.Button(
-            button_frame, text="Stop", command=self._on_stop, state="disabled"
+            button_frame, text="DETENER", command=self._on_stop, state="disabled"
         )
         self._stop_button.pack(side="left", padx=5, expand=True, fill="x")
 
@@ -91,28 +106,33 @@ class ControlPanelApp:
 
     def _on_go_home(self):
         self._run_in_background(
-            "Going home...", self._go_home_node, self._go_home_node.go_home
+            "Moviendo a la posición de inicio...", self._go_home_node, self._go_home_node.go_home
+        )
+
+    def _on_demo_move(self):
+        self._run_in_background(
+            "Ejecutando movimiento demo...", self._go_home_node, self._go_home_node.move_demo
         )
 
     def _on_start_route(self):
         passes = self._passes_var.get()
         self._run_in_background(
-            f"Running route ({passes} passes)...", 
-            self._replanning_node, 
+            f"Ejecutando ruta ({passes} pasadas)...",
+            self._replanning_node,
             lambda: self._replanning_node.run_coverage(num_passes=passes, resume=False)
         )
         
     def _on_resume_route(self):
         passes = self._passes_var.get()
         self._run_in_background(
-            f"Resuming route ({passes} passes)...", 
-            self._replanning_node, 
+            f"Reanudando ruta ({passes} pasadas)...",
+            self._replanning_node,
             lambda: self._replanning_node.run_coverage(num_passes=passes, resume=True)
         )
 
     def _on_stop(self):
         if self._active_node is not None:
-            self._status_var.set("Stopping...")
+            self._status_var.set("Deteniendo movimiento...")
             self._active_node.request_stop()
 
     def _run_in_background(self, status_text, node, target):
@@ -139,6 +159,7 @@ class ControlPanelApp:
         threading.Thread(target=worker, daemon=True).start()
 
     def _set_buttons_enabled(self, running):
+        self._demo_button.configure(state="disabled" if running else "normal")
         self._home_button.configure(state="disabled" if running else "normal")
         self._route_button.configure(state="disabled" if running else "normal")
         self._resume_button.configure(state="disabled" if running else "normal")
@@ -150,7 +171,7 @@ class ControlPanelApp:
             while True:
                 kind, payload = self._events.get_nowait()
                 if kind == "done":
-                    self._status_var.set("Ready.")
+                    self._status_var.set("Listo. Movimiento finalizado.")
                 elif kind == "error":
                     self._status_var.set(f"Error: {payload}")
                 self._busy = False

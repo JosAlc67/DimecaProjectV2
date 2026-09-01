@@ -4,6 +4,11 @@ from glob import glob
 from setuptools import find_packages, setup
 
 package_name = "irb2600_coating_cell"
+mesh_files = glob("meshes/**/*.STL", recursive=True) + glob("meshes/**/*.stl", recursive=True)
+mesh_data_files = {}
+for mesh_file in mesh_files:
+    destination = os.path.join("share", package_name, os.path.dirname(mesh_file))
+    mesh_data_files.setdefault(destination, []).append(mesh_file)
 
 setup(
     name=package_name,
@@ -14,8 +19,7 @@ setup(
         (os.path.join("share", package_name), ["package.xml"]),
         (os.path.join("share", package_name, "launch"), glob("launch/*.launch.py")),
         (os.path.join("share", package_name, "config"), glob("config/*.yaml")),
-        (os.path.join("share", package_name, "meshes"), glob("meshes/*.STL") + glob("meshes/*.stl")),
-    ],
+    ] + list(mesh_data_files.items()),
     install_requires=["setuptools"],
     zip_safe=True,
     maintainer="DIMECA Group 1",

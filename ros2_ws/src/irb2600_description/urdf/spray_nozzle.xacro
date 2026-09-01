@@ -5,7 +5,7 @@
     Cobra spraying-nozzle end effector.  Its visual mesh comes from the
     supplied Cobra CAD export.  The collision geometry is deliberately a
     conservative box derived from that export's bounds, so MoveIt does not
-    need to process the 119k-triangle presentation mesh on every plan.
+    need to process the high-detail presentation mesh on every plan.
 
     Frames:
       tool0            - ROS-Industrial flange-facing frame (from irb2600_macro.xacro)
@@ -26,6 +26,13 @@
     material_abb_orange macro, assuming it is already defined.
   -->
 
+  <!-- Calibration inputs. Defaults preserve the prior digital model; replace
+       them with the measured tool0-to-Cobra and tool0-to-TCP transforms. -->
+  <xacro:arg name="cobra_mount_xyz" default="0.054 -0.056 0"/>
+  <xacro:arg name="cobra_mount_rpy" default="0 -1.5708 0"/>
+  <xacro:arg name="cobra_tcp_xyz" default="0 0 0.35"/>
+  <xacro:arg name="cobra_tcp_rpy" default="0 0 0"/>
+
   <link name="spray_nozzle_link">
     <inertial>
       <origin xyz="8.65924565893986E-05 0.0195599698345866 1.93283795397848E-10" rpy="0 0 0"/>
@@ -37,17 +44,17 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://irb2600_coating_cell/meshes/CobraPaintTool.STL" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://irb2600_coating_cell/meshes/cad/cobra_final.stl"/>
       </geometry>
       <xacro:material_abb_orange/>
     </visual>
     <collision>
-      <!-- CobraPaintTool STL bounds, converted from mm to m:
-           342.479 x 100.750 x 88.713.  Offset is its bounding-box center
-           in the source mesh frame. -->
-      <origin xyz="0.174107 0.056650 0.054678" rpy="0 0 0"/>
+      <!-- Final Cobra assembly STL bounds in metres:
+           342.479 x 315.413 x 108.000. The box center is expressed in the
+           STL frame and envelopes the complete assembly. -->
+      <origin xyz="-0.115471 -0.122706 0.0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.342479 0.100750 0.088713"/>
+        <box size="0.342479 0.315413 0.108000"/>
       </geometry>
     </collision>
   </link>
@@ -55,9 +62,8 @@
   <joint name="tool0_to_spray_nozzle" type="fixed">
     <parent link="tool0"/>
     <child link="spray_nozzle_link"/>
-    <!-- CobraPaintTool length is along its X axis, and its mounting plate center is offset in Y and Z. 
-         We pitch by -90 deg to align X with tool0's Z axis (outward), and offset XYZ to center it on the flange. -->
-    <origin xyz="0.054 -0.056 0" rpy="0 -1.5708 0"/>
+    <!-- Provisional calibration; replace with the measured mounting transform. -->
+    <origin xyz="$(arg cobra_mount_xyz)" rpy="$(arg cobra_mount_rpy)"/>
   </joint>
 
   <!-- TCP: x_e in the preliminary mathematical model (report eq. 1-2, 8-9) -->
@@ -65,7 +71,7 @@
   <link name="nozzle_tip"/>
 
   <joint name="tool0_to_nozzle_tip" type="fixed">
-    <origin xyz="0 0 0.35" rpy="0 0 0"/>
+    <origin xyz="$(arg cobra_tcp_xyz)" rpy="$(arg cobra_tcp_rpy)"/>
     <parent link="tool0"/>
     <child link="nozzle_tip"/>
   </joint>

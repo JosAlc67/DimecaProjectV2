@@ -58,14 +58,8 @@
   </joint>
 
   <!-- TCP: x_e in the preliminary mathematical model (report eq. 1-2, 8-9) -->
-  <link name="nozzle_tip">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.01 0.01 0.01"/>
-      </geometry>
-    </visual>
-  </link>
+  <!-- Coordinate-only link: deliberately has no visual/collision geometry. -->
+  <link name="nozzle_tip"/>
 
   <joint name="tool0_to_nozzle_tip" type="fixed">
     <origin xyz="0 0 0.35" rpy="0 0 0"/>

@@ -62,9 +62,8 @@ from std_srvs.srv import Trigger
 from visualization_msgs.msg import Marker, MarkerArray
 
 from irb2600_coating_cell.geometry_utils import quaternion_from_rpy
-import os
 import trimesh
-from ament_index_python.packages import get_package_share_directory
+from irb2600_coating_cell.resource_utils import resolve_resource_uri
 
 _TARGET_COLOR = ColorRGBA(r=0.2, g=0.5, b=1.0, a=1.0)
 
@@ -225,17 +224,13 @@ class SceneSetupNode(Node):
         obj.operation = CollisionObject.ADD
 
         # Load mesh
-        mesh_path = mesh_file
-        if mesh_file.startswith("package://"):
-            pkg_name = mesh_file.split("/")[2]
-            rel_path = "/".join(mesh_file.split("/")[3:])
-            try:
-                share_dir = get_package_share_directory(pkg_name)
-                mesh_path = os.path.join(share_dir, rel_path)
-            except Exception:
-                mesh_path = f"/home/josuealcivar/DimecaProjectV2/ros2_ws/src/{pkg_name}/{rel_path}"
+        try:
+            mesh_path = resolve_resource_uri(mesh_file)
+        except (ValueError, LookupError) as exc:
+            self.get_logger().error(f"Could not resolve mesh '{mesh_file}': {exc}")
+            return obj
 
-        if not os.path.exists(mesh_path):
+        if not mesh_path.exists():
             self.get_logger().error(f"Mesh file not found: {mesh_path}")
             return obj
 

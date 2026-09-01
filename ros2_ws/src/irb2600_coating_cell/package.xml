@@ -23,6 +23,13 @@
   <depend>moveit_msgs</depend>
   <depend>action_msgs</depend>
   <depend>visualization_msgs</depend>
+  <depend>ament_index_python</depend>
+  <depend>tf2_ros</depend>
+  <depend>interactive_markers</depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-trimesh</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
 
   <exec_depend>irb2600_moveit_config</exec_depend>
 

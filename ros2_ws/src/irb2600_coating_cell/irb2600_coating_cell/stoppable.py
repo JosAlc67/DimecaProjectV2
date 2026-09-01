@@ -6,6 +6,7 @@ taking effect before the *next* motion starts.
 """
 
 import threading
+import time
 
 import rclpy
 from std_msgs.msg import String
@@ -40,7 +41,8 @@ class StoppableActionNode:
         request_stop(). Polls in short slices (instead of one unbounded
         spin_until_future_complete) so a Stop request lands promptly."""
         send_goal_future = action_client.send_goal_async(goal)
-        rclpy.spin_until_future_complete(self, send_goal_future)
+        if not self._wait_for_future(send_goal_future):
+            return None
         goal_handle = send_goal_future.result()
 
         if not goal_handle.accepted:
@@ -51,9 +53,7 @@ class StoppableActionNode:
             result_future = goal_handle.get_result_async()
             cancel_sent = False
             while rclpy.ok():
-                rclpy.spin_until_future_complete(
-                    self, result_future, timeout_sec=poll_timeout_s
-                )
+                self._wait_for_future(result_future, timeout_s=poll_timeout_s)
                 if result_future.done():
                     return result_future.result()
                 if self._stop_requested():
@@ -71,6 +71,26 @@ class StoppableActionNode:
             return None
         finally:
             self._active_goal_handle = None
+
+    def _wait_for_future(self, future, timeout_s=None):
+        """Wait standalone or while a separate executor already spins this node."""
+        deadline = time.monotonic() + timeout_s if timeout_s is not None else None
+        executor = getattr(self, "executor", None)
+        if executor is None:
+            rclpy.spin_until_future_complete(self, future, timeout_sec=timeout_s)
+            return future.done()
+        while rclpy.ok() and not future.done():
+            if deadline is not None and time.monotonic() >= deadline:
+                return False
+            time.sleep(0.01)
+        return future.done()
+
+    def _cooperative_pause(self, timeout_s):
+        """Allow callbacks to progress with or without an external executor."""
+        if getattr(self, "executor", None) is None:
+            rclpy.spin_once(self, timeout_sec=timeout_s)
+        else:
+            time.sleep(timeout_s)
 
     @staticmethod
     def _succeeded(result_response):

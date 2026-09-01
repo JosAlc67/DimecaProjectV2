@@ -32,6 +32,7 @@ from rclpy.node import Node
 from std_srvs.srv import SetBool
 
 from irb2600_coating_cell.raster_path import flatten_rows, generate_raster_rows
+from irb2600_coating_cell.resource_utils import load_shared_cell_config
 
 
 class TrajectoryPlannerNode(Node):
@@ -39,21 +40,28 @@ class TrajectoryPlannerNode(Node):
     def __init__(self):
         super().__init__("trajectory_planner_node")
 
+        try:
+            shared_config = load_shared_cell_config()
+        except (OSError, ValueError, LookupError):
+            shared_config = {}
+        target_config = shared_config.get("target_structure", {})
+        trajectory_config = shared_config.get("trajectory", {})
+
         self.declare_parameter("target_structure.frame_id", "world")
-        self.declare_parameter("target_structure.position", [1.8, 0.0, 1.0])
-        self.declare_parameter("target_structure.orientation_rpy", [0.0, 0.0, 0.0])
-        self.declare_parameter("target_structure.size", [0.02, 1.0, 0.6])
-        self.declare_parameter("target_structure.local_normal", [-1.0, 0.0, 0.0])
+        self.declare_parameter("target_structure.position", target_config.get("position", [1.8, 0.0, 1.0]))
+        self.declare_parameter("target_structure.orientation_rpy", target_config.get("orientation_rpy", [0.0, 0.0, 0.0]))
+        self.declare_parameter("target_structure.size", target_config.get("size", [0.02, 1.0, 0.6]))
+        self.declare_parameter("target_structure.local_normal", target_config.get("local_normal", [-1.0, 0.0, 0.0]))
 
         # Table VIII: application distance 0.15 - 0.25 m.
-        self.declare_parameter("d_standoff", 0.20)
+        self.declare_parameter("trajectory.d_standoff", trajectory_config.get("d_standoff", 0.15))
         # Margin kept in from the panel edges so the nozzle footprint stays
         # on the structure.
         self.declare_parameter("edge_margin", 0.05)
         # Vertical spacing between raster passes.
         self.declare_parameter("row_pitch", 0.10)
         # Max Cartesian step used by compute_cartesian_path's interpolation.
-        self.declare_parameter("max_step", 0.01)
+        self.declare_parameter("trajectory.max_cartesian_step", trajectory_config.get("max_cartesian_step", 0.05))
         self.declare_parameter("group_name", "manipulator")
         self.declare_parameter("tcp_link", "nozzle_tip")
         self.declare_parameter("execute", False)
@@ -86,7 +94,7 @@ class TrajectoryPlannerNode(Node):
             rpy=p("target_structure.orientation_rpy").value,
             size=p("target_structure.size").value,
             local_normal=p("target_structure.local_normal").value,
-            d_standoff=p("d_standoff").value,
+            d_standoff=p("trajectory.d_standoff").value,
             edge_margin=p("edge_margin").value,
             row_pitch=p("row_pitch").value,
         )
@@ -101,7 +109,7 @@ class TrajectoryPlannerNode(Node):
         request.group_name = self.get_parameter("group_name").value
         request.link_name = self.get_parameter("tcp_link").value
         request.waypoints = waypoints
-        request.max_step = float(self.get_parameter("max_step").value)
+        request.max_step = float(self.get_parameter("trajectory.max_cartesian_step").value)
         request.jump_threshold = 0.0
         request.avoid_collisions = bool(self.get_parameter("avoid_collisions").value)
         request.start_state.is_diff = True

@@ -22,11 +22,21 @@ from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 import tf2_ros
 
+from irb2600_coating_cell.geometry_utils import rotate_vector_by_quaternion
+from irb2600_coating_cell.resource_utils import load_shared_cell_config
+
 
 class SprayControllerNode(Node):
 
     def __init__(self):
         super().__init__("spray_controller_node")
+
+        try:
+            shared_config = load_shared_cell_config()
+            default_standoff = float(shared_config.get("trajectory", {}).get("d_standoff", 0.15))
+        except (OSError, ValueError, LookupError):
+            default_standoff = 0.15
+        self.declare_parameter("trajectory.d_standoff", default_standoff)
 
         transient_local_qos = QoSProfile(depth=1)
         transient_local_qos.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
@@ -71,10 +81,15 @@ class SprayControllerNode(Node):
             )
             
             p = Point()
-            # Paint slightly in front of the nozzle tip so it hits the panel
-            p.x = trans.transform.translation.x + 0.15
-            p.y = trans.transform.translation.y
-            p.z = trans.transform.translation.z
+            # nozzle_tip +Z is the tool approach vector. Project the configured
+            # standoff along that orientation instead of assuming world +X.
+            standoff = float(self.get_parameter("trajectory.d_standoff").value)
+            direction = rotate_vector_by_quaternion(
+                (0.0, 0.0, standoff), trans.transform.rotation
+            )
+            p.x = trans.transform.translation.x + direction[0]
+            p.y = trans.transform.translation.y + direction[1]
+            p.z = trans.transform.translation.z + direction[2]
             
             self._paint_marker.points.append(p)
             self._paint_marker.header.stamp = self.get_clock().now().to_msg()

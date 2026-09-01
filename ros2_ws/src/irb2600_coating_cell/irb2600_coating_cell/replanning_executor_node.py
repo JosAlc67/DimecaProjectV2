@@ -16,7 +16,12 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from std_msgs.msg import Bool
 from std_srvs.srv import SetBool
 
-from irb2600_coating_cell.geometry_utils import quaternion_with_z_axis
+from irb2600_coating_cell.geometry_utils import (
+    quaternion_from_rpy,
+    quaternion_with_z_axis,
+    rotate_vector_by_quaternion,
+    transform_point,
+)
 from irb2600_coating_cell.resource_utils import load_shared_cell_config, resolve_resource_uri
 from irb2600_coating_cell.raster_path import resample_rows
 from irb2600_coating_cell.run_metrics import RunMetrics
@@ -45,6 +50,8 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         self.declare_parameter("target_structure.frame_id", "world")
         target_config = shared_config.get("target_structure", {})
         self.declare_parameter("target_structure.position", target_config.get("position", [0.0, -1.2, 1.5]))
+        self.declare_parameter("target_structure.orientation_rpy", target_config.get("orientation_rpy", [0.0, 0.0, 0.0]))
+        self.declare_parameter("target_structure.local_normal", target_config.get("local_normal", [-1.0, 0.0, 0.0]))
         self.declare_parameter("target_structure.mesh_file", target_config.get("mesh_file", "package://irb2600_coating_cell/meshes/curved_panel.stl"))
         self.declare_parameter("trajectory.d_standoff", configured("trajectory", "d_standoff", 0.15))
         self.declare_parameter("trajectory.max_cartesian_step", configured("trajectory", "max_cartesian_step", 0.05))
@@ -93,21 +100,43 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
             self._workspace_clear_since = None
         self._workspace_clear = clear
 
-    def _generate_mesh_coverage_path(self, mesh_file, center_pos, standoff):
-        """Generates a list of Poses by raycasting against the 3D mesh surface."""
+    def _generate_mesh_coverage_path(self, mesh_file, target_pose, standoff):
+        """Generate world-frame poses from a mesh expressed in its local frame.
+
+        The mesh is sampled in local Y/Z so it can be placed at any 6D pose.
+        Its working face must point along ``target_structure.local_normal``;
+        this is the established convention for the coating-panel CAD assets.
+        """
         import trimesh
         import numpy as np
         mesh_path = resolve_resource_uri(mesh_file)
             
         self.get_logger().info(f"Loading mesh for 3D CPP from {mesh_path}")
         mesh = trimesh.load(mesh_path)
-        mesh.apply_translation(center_pos)
         
         p = self.get_parameter
         step_z = p("trajectory.raster_step_z").value
         step_y = p("trajectory.raster_step_y").value
         
         bounds = mesh.bounds
+        center_pos = (
+            target_pose.position.x,
+            target_pose.position.y,
+            target_pose.position.z,
+        )
+        target_quat = target_pose.orientation
+        local_normal = tuple(
+            float(value) for value in p("target_structure.local_normal").value
+        )
+        normal_length = float(np.linalg.norm(local_normal))
+        if normal_length < 1e-9:
+            raise ValueError("target_structure.local_normal must not be zero")
+        local_normal = tuple(value / normal_length for value in local_normal)
+        if abs(local_normal[0]) < 0.99:
+            raise ValueError(
+                "mesh coverage currently requires target_structure.local_normal "
+                "to be aligned with the local X axis"
+            )
         z_min = bounds[0][2] + 0.1
         z_max = bounds[1][2] - 0.1
         y_min = bounds[0][1] + 0.1
@@ -122,9 +151,15 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
             y_points = self._frange(y_min, y_max, step_y) if direction == 1 else self._frange(y_max, y_min, -step_y)
             
             for current_y in y_points:
-                # Shoot a ray from -X (robot side) towards the mesh to find the front surface
-                origin = np.array([[center_pos[0] - 1.0, current_y, current_z]])
-                direction_vec = np.array([[1.0, 0.0, 0.0]])
+                # Raycast in the CAD's local coordinates.  The world pose is
+                # applied only after finding the exact surface point and normal.
+                x_extent = (bounds[1][0] - bounds[0][0]) / 2.0
+                origin = np.array([[
+                    (bounds[0][0] + bounds[1][0]) / 2.0 + local_normal[0] * (x_extent + 1.0),
+                    current_y,
+                    current_z,
+                ]])
+                direction_vec = np.array([[-local_normal[0], 0.0, 0.0]])
 
                 locs, idx_ray, idx_tri = mesh.ray.intersects_location(
                     ray_origins=origin,
@@ -136,24 +171,24 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
                     hit_point = locs[0]
                     tri_idx = idx_tri[0]
                     
-                    # Get exact 3D surface normal
+                    # Orient the local normal toward the configured working face.
                     normal = mesh.face_normals[tri_idx]
-                    # Ensure normal points outwards towards the robot (towards -X)
-                    if normal[0] > 0:
+                    if float(np.dot(normal, local_normal)) < 0.0:
                         normal = -normal
-                        
-                    # Calculate tool position with standoff along the normal
-                    tool_x = hit_point[0] + normal[0] * standoff
-                    tool_y = hit_point[1] + normal[1] * standoff
-                    tool_z = hit_point[2] + normal[2] * standoff
+
+                    tool_point_local = hit_point + normal * standoff
+                    tool_x, tool_y, tool_z = transform_point(
+                        tool_point_local, center_pos, target_quat
+                    )
                     
                     pose = Pose()
                     pose.position.x = float(tool_x)
                     pose.position.y = float(tool_y)
                     pose.position.z = float(tool_z)
                     
-                    # Tool approaches AGAINST the normal
-                    approach = [-float(normal[0]), -float(normal[1]), -float(normal[2])]
+                    # Tool approaches the surface, against its outward normal.
+                    normal_world = rotate_vector_by_quaternion(normal, target_quat)
+                    approach = [-normal_world[0], -normal_world[1], -normal_world[2]]
                     pose.orientation = quaternion_with_z_axis(approach)
                     current_row.append(pose)
                     
@@ -187,23 +222,30 @@ class CoveragePathExecutorNode(StoppableActionNode, Node):
         )
         self._metrics.event("run_started", f"passes={num_passes}, resume={resume}")
         
-        # Get target from parameters or dynamic topic
+        # Get target from parameters or the perception simulation.  Keep the
+        # orientation as well as translation; CAD assets are not world-aligned.
         frame_id = p("target_structure.frame_id").value
+        target_pose = Pose()
         if self._latest_target_pose is not None:
-            pos = [
-                self._latest_target_pose.pose.position.x,
-                self._latest_target_pose.pose.position.y,
-                self._latest_target_pose.pose.position.z
-            ]
+            frame_id = self._latest_target_pose.header.frame_id or frame_id
+            target_pose = self._latest_target_pose.pose
             self.get_logger().info("Using dynamic structure pose from perception sensor.")
         else:
-            pos = p("target_structure.position").value
+            target_pose.position.x, target_pose.position.y, target_pose.position.z = (
+                float(value) for value in p("target_structure.position").value
+            )
+            target_pose.orientation = quaternion_from_rpy(
+                *[float(value) for value in p("target_structure.orientation_rpy").value]
+            )
             self.get_logger().warn("No structure pose received, using fallback parameter.")
         mesh_file = p("target_structure.mesh_file").value
         d_standoff = p("trajectory.d_standoff").value
         
-        self.get_logger().info(f"Generating 3D Coverage Path for mesh at {pos}")
-        rows = self._generate_mesh_coverage_path(mesh_file, pos, d_standoff)
+        self.get_logger().info(
+            "Generating 3D Coverage Path for mesh at "
+            f"({target_pose.position.x:.3f}, {target_pose.position.y:.3f}, {target_pose.position.z:.3f})"
+        )
+        rows = self._generate_mesh_coverage_path(mesh_file, target_pose, d_standoff)
         requested_waypoints = int(p("trajectory.requested_waypoints").value)
         if requested_waypoints > 0:
             try:

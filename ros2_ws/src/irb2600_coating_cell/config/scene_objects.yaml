@@ -17,6 +17,44 @@
     metrics:
       enabled: true
       output_directory: ""
+    # CAD asset registry.  `cad_source` is traceability metadata; ROS/MoveIt
+    # consumes only STL/DAE meshes declared in *_mesh_file.  The MotionCam
+    # STEP has not been exported to a ROS mesh yet, so its documented housing
+    # dimensions are used as a visual-only provisional volume.
+    cad_assets: [motioncam_3d_l]
+    motioncam_3d_l:
+      frame_id: world
+      # Provisional survey pose: replace with the measured installation pose.
+      position: [-0.65, -1.2, 1.5]
+      orientation_rpy: [0.0, 1.57079632679, 0.0]
+      collision_enabled: false
+      collision_mesh_file: ""
+      fallback_type: box
+      size: [0.628, 0.068, 0.086]
+      visual_enabled: true
+      visual_mesh_file: ""
+      cad_source: "DISEÑO/Robot_IRB2600_20kg_16.5/MotionCam-3D-Color-L-(Blue)-bps-env-fov-cones.STEP"
+    motioncam:
+      enabled: true
+      parent_frame: world
+      optical_frame: motioncam_optical_frame
+      position: [-0.65, -1.2, 1.5]
+      orientation_rpy: [0.0, 1.57079632679, 0.0]
+      near_range_m: 0.778
+      far_range_m: 3.034
+      horizontal_fov_rad: 0.779
+      vertical_fov_rad: 0.644
+      max_points: 2000
+    c3:
+      # Enable once its flange/mount transform is measured.
+      enabled: false
+      parent_frame: world
+      optical_frame: c3_t60_optical_frame
+      position: [0.0, 0.0, 0.0]
+      orientation_rpy: [0.0, 0.0, 0.0]
+      min_distance_m: 0.015
+      max_distance_m: 0.150
+      simulated_thickness_um: 100.0
     back_pole:
       frame_id: world
       orientation_rpy: [0.0, 0.0, 0.0]

@@ -45,6 +45,25 @@ def rotate_vector_by_quaternion(vector, q: Quaternion):
     return (rx, ry, rz)
 
 
+def inverse_rotate_vector_by_quaternion(vector, q: Quaternion):
+    """Rotate ``vector`` from a child frame into the parent inverse frame."""
+    inverse = Quaternion()
+    inverse.x, inverse.y, inverse.z, inverse.w = -q.x, -q.y, -q.z, q.w
+    return rotate_vector_by_quaternion(vector, inverse)
+
+
+def transform_point(point, position, orientation: Quaternion):
+    """Transform a local 3D point by a pose, without depending on tf2."""
+    rotated = rotate_vector_by_quaternion(point, orientation)
+    return tuple(float(position[index]) + rotated[index] for index in range(3))
+
+
+def inverse_transform_point(point, position, orientation: Quaternion):
+    """Express a parent-frame point in the local frame of a pose."""
+    translated = tuple(float(point[index]) - float(position[index]) for index in range(3))
+    return inverse_rotate_vector_by_quaternion(translated, orientation)
+
+
 def _vec_normalize(v):
     n = math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
     if n < 1e-9:

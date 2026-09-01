@@ -49,17 +49,17 @@ El sistema es capaz de generar trayectorias de cobertura dinámicas adaptadas a 
 ## Uso y Ejecución
 
 ### 1. Inicializar la Celda de Simulación
-Para levantar el entorno completo (RViz, MoveIt, controladores y configuración de la escena con el panel y los obstáculos), abre una terminal y ejecuta:
+Para levantar el entorno completo (RViz, MoveIt, controladores, escena CAD y panel de control), abre una terminal y ejecuta:
 ```bash
 ros2 launch irb2600_coating_cell coating_cell_bringup.launch.py
 ```
 
 ### 2. Panel de Control (GUI)
-Para interactuar con el robot de manera amigable, abre una nueva terminal y ejecuta la interfaz de usuario:
-```bash
-ros2 run irb2600_coating_cell gui_control_node
-```
+El panel se abre automáticamente junto con la simulación. Si necesitas
+iniciarlo de forma independiente, abre una segunda terminal con el workspace
+compilado y ejecuta `ros2 run irb2600_coating_cell gui_control_node`.
 Desde esta ventana podrás:
+*   **Movimiento demo:** Realiza un desplazamiento corto, visible y validado por colisiones para comprobar el control y la animación en RViz.
 *   **Start Route:** Iniciar el proceso de recubrimiento sobre el panel curvo, con la opción de definir la cantidad de pasadas (capas) necesarias mediante un selector.
 *   **Stop (Emergency Stop):** Detiene el movimiento del robot y del riel instantáneamente en caso de emergencia, cancelando la ruta actual.
 *   **Go Home:** Regresa el brazo robótico y la plataforma del riel a su posición inicial de reposo.
@@ -82,4 +82,3 @@ Al arrastrarlos con el ratón hacia el área de trabajo del robot (frente al lie
 ## Créditos y Referencias
 
 El URDF y las mallas visuales/colisión del robot IRB 2600 base son un port de la implementación original en ROS 1 Noetic creada por [RAMEL-ESPOL/IRB2600-ABB](https://github.com/RAMEL-ESPOL/IRB2600-ABB) (© 2022, Francisco Yumbla, Javier Pagalo).
-

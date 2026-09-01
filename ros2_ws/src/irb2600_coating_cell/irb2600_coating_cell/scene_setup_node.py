@@ -95,7 +95,9 @@ class SceneSetupNode(Node):
         # obstacles.  They can have a high-detail visual mesh and a distinct,
         # simplified collision mesh.  This avoids putting presentation meshes
         # (such as the 119k-triangle Cobra export) into MoveIt.
-        self.declare_parameter("cad_assets", [])
+        # A typed string-array default is required by rclpy; an empty list is
+        # inferred as BYTE_ARRAY and rejects YAML string-array overrides.
+        self.declare_parameter("cad_assets", [""])
         self._asset_names = [name for name in self.get_parameter("cad_assets").value if name]
         for name in self._asset_names:
             self.declare_parameter(f"{name}.frame_id", "world")

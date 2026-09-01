@@ -9,8 +9,10 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
@@ -48,11 +50,25 @@ def generate_launch_description():
         output="screen",
     )
 
+    gui_control_node = Node(
+        package="irb2600_coating_cell",
+        executable="gui_control_node",
+        name="gui_control_node",
+        output="screen",
+        condition=IfCondition(LaunchConfiguration("gui")),
+    )
+
     return LaunchDescription(
         [
+            DeclareLaunchArgument(
+                "gui",
+                default_value="true",
+                description="Open the Tkinter simulation control panel.",
+            ),
             moveit_demo,
             scene_setup_node,
             perception_sim_node,
             spray_controller_node,
+            gui_control_node,
         ]
     )
